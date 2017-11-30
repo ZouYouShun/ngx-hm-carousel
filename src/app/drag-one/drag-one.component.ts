@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RUN_DIRECTION } from 'ngx-hm-carousel';
+import { MatSnackBar } from '@angular/material';
 
 @Component({
   selector: 'app-drag-one',
@@ -38,8 +39,13 @@ export class DragOneComponent {
     },
   ];
 
+  constructor(public snackBar: MatSnackBar) { }
+
   openGallery($event) {
-    alert($event);
+    this.snackBar.open(`You click ${$event}`, 'close', {
+      duration: 3000,
+    });
+
   }
 
   switchIndex(index) {
@@ -47,8 +53,8 @@ export class DragOneComponent {
   }
 
   toggleDirection($event) {
-    console.log($event);
     this.direction = this.directionToggle ? RUN_DIRECTION.RIGHT : RUN_DIRECTION.LEFT;
   }
 
 }
+

@@ -1,11 +1,11 @@
-# NgxHmCarousel  
+# NgxHmCarousel [DEMO](zouyoushun.github.io/ngx-hm-carousel)
 
 A lightweight carousel UI for Angular.
 
 [ZouYouShun/ngx-hm-carousel](https://github.com/ZouYouShun/ngx-hm-carousel)
 
 This package is design by angular and hammerjs, if you use @angular/material, I strongly recommend you use this package.
-[See ngx-hm-carousel in action!](zouyoushun.github.io/ngx-hm-carousel)
+
 
 <img src="https://i.imgur.com/SyyBSR9.gif" width="686">
 

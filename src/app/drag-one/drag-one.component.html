@@ -11,7 +11,7 @@
 
   <mat-slide-toggle
     color="primary"
-    [checked]="directionToggle" (change)="toggleDirection($event)">
+    [(ngModel)]="directionToggle" (change)="toggleDirection($event)">
     {{directionToggle ? 'go right' : 'go left'}}
   </mat-slide-toggle>
 </div>
