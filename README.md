@@ -89,7 +89,6 @@ export class YourModule {}
 
 ```ts
 import { Component } from '@angular/core';
-import { GALLERY_TYPE, GalleryItem } from 'ngx-hm-carousel';
 
 @Component({
   selector: 'app-root',
@@ -97,65 +96,30 @@ import { GALLERY_TYPE, GalleryItem } from 'ngx-hm-carousel';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  avatars: GalleryItem[] = [
+ 
+  avatars = [
     {
-      name: 'kristy',
-      type: GALLERY_TYPE.IMG,
-      url: 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      defaultUrl: 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      isDownload: true
+      name: 'coffee',
+      url: 'https://www.w3schools.com/w3images/coffee.jpg',
     },
     {
-      name: 'matthew',
-      type: GALLERY_TYPE.VIDEO,
-      url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-      defaultUrl: 'https://cdn3.iconfinder.com/data/icons/watercolorspring/128/bunny-profile.png',
-      isDownload: true
+      name: 'mist',
+      url: 'https://www.w3schools.com/w3images/mist.jpg',
     },
     {
-      name: 'chris',
-      type: GALLERY_TYPE.YOUTUBE,
-      url: 'https://www.youtube.com/embed/HSOtku1j600',
-      defaultUrl: 'https://i.ytimg.com/vi/HSOtku1j600/hqdefault.jpg',
-      isDownload: true
+      name: 'workbench',
+      url: 'https://www.w3schools.com/w3images/workbench.jpg',
     },
     {
-      name: 'jenny',
-      type: GALLERY_TYPE.IMG,
-      url: 'https://semantic-ui.com/images/avatar/large/jenny.jpg',
-      defaultUrl: 'https://semantic-ui.com/images/avatar/large/jenny.jpg',
-      isDownload: true
+      name: 'bridge',
+      url: 'https://www.w3schools.com/w3images/bridge.jpg',
     },
     {
-      name: 'matthew',
-      type: GALLERY_TYPE.IMG,
-      url: 'https://semantic-ui.com/images/avatar2/large/matthew.png',
-      defaultUrl: 'https://semantic-ui.com/images/avatar2/large/matthew.png',
-      isDownload: true
+      name: 'woods',
+      url: 'https://www.w3schools.com/w3images/woods.jpg',
     },
-    {
-      name: 'jenny',
-      type: GALLERY_TYPE.IMG,
-      url: 'https://semantic-ui.com/images/avatar/large/jenny.jpg',
-      defaultUrl: 'https://semantic-ui.com/images/avatar/large/jenny.jpg',
-      isDownload: true
-    },
-    {
-      name: 'chris',
-      type: GALLERY_TYPE.IMG,
-      url: 'https://semantic-ui.com/images/avatar/large/chris.jpg',
-      defaultUrl: 'https://semantic-ui.com/images/avatar/large/chris.jpg',
-      isDownload: true
-    },
-    {
-      name: 'jenny',
-      type: GALLERY_TYPE.IMG,
-      url: 'https://semantic-ui.com/images/avatar/large/jenny.jpg',
-      defaultUrl: 'https://semantic-ui.com/images/avatar/large/jenny.jpg',
-      isDownload: true
-    }
   ];
-
+  
   openGallery($event) {
     console.log($event);
   }
