@@ -1,0 +1,41 @@
+<carousel-container
+[autoplay]="true"
+[show-num]="5"
+[drag-many]="true"
+[autoplay-speed]="3000"
+[between-delay]="2000">
+
+  <section
+    carousel-items-container
+    class="pane-container">
+    <article class="pane cursor-pointer"
+      *ngFor="let avatar of avatars; let i = index;"
+      carousel-item
+      (carousel-item-click)="openGallery($event)"
+      [style.backgroundImage]="avatar.url | safe:'background-image'">
+      <div class="inner">
+        <header>
+          <p>{{i}}</p>
+        </header>
+      </div>
+    </article>
+  </section>
+
+  <ng-template  #carouselPrev>
+    <i class="material-icons icon" style="font-size:50px;">keyboard_arrow_left</i>
+  </ng-template>
+
+  <ng-template #carouselNext>
+    <i class="material-icons icon" style="font-size:50px;">keyboard_arrow_right</i>
+  </ng-template>
+
+  <ng-template #carouselDot let-model>
+      <div class="ball"
+        [class.visible]="model.index === model.currentIndex"></div>
+  </ng-template>
+
+  <ng-template #carouselProgress let-model>
+      <div class="progress top" [style.width]="model.progress + '%'"></div>
+  </ng-template>
+
+</carousel-container>
