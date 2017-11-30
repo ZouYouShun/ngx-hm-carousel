@@ -1,4 +1,4 @@
-# NgxHmCarousel [DEMO](zouyoushun.github.io/ngx-hm-carousel)
+# NgxHmCarousel [DEMO](https://zouyoushun.github.io/ngx-hm-carousel)
 
 A lightweight carousel UI for Angular.
 
