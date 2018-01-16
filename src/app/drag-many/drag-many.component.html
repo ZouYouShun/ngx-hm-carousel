@@ -1,16 +1,16 @@
-<carousel-container
-[autoplay]="true"
-[show-num]="5"
-[drag-many]="true"
-[autoplay-speed]="3000"
-[between-delay]="2000">
+<ngx-hm-carousel
+  [autoplay]="true"
+  [show-num]="5"
+  [drag-many]="true"
+  [autoplay-speed]="3000"
+  [between-delay]="2000">
 
   <section
-    carousel-items-container
+    ngx-hm-carousel-container
     class="pane-container">
     <article class="pane cursor-pointer"
       *ngFor="let avatar of avatars; let i = index;"
-      carousel-item
+      ngx-hm-carousel-item
       [style.backgroundImage]="avatar.url | safe:'background-image'">
       <div class="inner">
         <header>
@@ -37,4 +37,4 @@
       <div class="progress top" [style.width]="model.progress + '%'"></div>
   </ng-template>
 
-</carousel-container>
+</ngx-hm-carousel>

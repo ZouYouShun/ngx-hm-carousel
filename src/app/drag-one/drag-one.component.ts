@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { RUN_DIRECTION } from 'ngx-hm-carousel';
 import { MatSnackBar } from '@angular/material';
+import { NgxHmRUN_DIRECTION } from '../ngx-hm-carousel/ngx-hm-carousel.component';
 
 @Component({
   selector: 'app-drag-one',
@@ -12,7 +12,7 @@ export class DragOneComponent {
   index = 0;
   infinite = true;
   // mourseEnable = false;
-  direction: RUN_DIRECTION = RUN_DIRECTION.RIGHT;
+  direction: NgxHmRUN_DIRECTION = NgxHmRUN_DIRECTION.RIGHT;
   directionToggle = true;
   autoplay = true;
 
@@ -53,7 +53,7 @@ export class DragOneComponent {
   }
 
   toggleDirection($event) {
-    this.direction = this.directionToggle ? RUN_DIRECTION.RIGHT : RUN_DIRECTION.LEFT;
+    this.direction = this.directionToggle ? NgxHmRUN_DIRECTION.RIGHT : NgxHmRUN_DIRECTION.LEFT;
   }
 
 }

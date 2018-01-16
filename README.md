@@ -221,6 +221,7 @@ because I use material icon, so add material icon CDN
 | `autoplay-speed`         | no       | 5000 (ms)             | number          | carousel-container | 自動播放的速度       |
 | `between-delay`          | no       | 8000 (ms)             | number          | carousel-container | 自動播放被暫停的時間 |
 | `autoplay-direction`     | no       | RUN_DIRECTION.RIGHT   | RUN_DIRECTION   | carousel-container | 往右邊自動播放       |
+| `mourse-enable`          | no       | false                 | boolean         | carousel-container | 是否啟用滑鼠滑入停用自動播放功能|
 | `show-num`               | no       | 1                     | number          | carousel-container | 顯示筆數            |
 | `scroll-num`             | no       | 1                     | number          | carousel-container | 一次移動的筆數       |
 | `drag-many`              | no       | false                 | boolean         | carousel-container | 模擬scroll的動作    |
