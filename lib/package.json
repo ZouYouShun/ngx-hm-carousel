@@ -1,6 +1,6 @@
 {
   "name": "ngx-hm-carousel",
-  "version": "0.1.0",
+  "version": "1.0.2",
   "repository": {
     "type": "git",
     "url": "url"
@@ -15,7 +15,9 @@
   "typings": "./ngx-hm-carousel.d.ts",
   "peerDependencies": {
     "@angular/core": "^5.2.9",
-    "@angular/common": "^5.2.9",
+    "@angular/common": "^5.2.9"
+  },
+  "dependencies": {
     "hammerjs": "^2.0.8"
   },
   "devDependencies": {
