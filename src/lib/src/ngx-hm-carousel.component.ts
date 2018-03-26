@@ -1,42 +1,36 @@
-import { fromEvent } from 'rxjs/observable/fromEvent';
-import { interval } from 'rxjs/observable/interval';
-import { bufferCount, debounceTime, tap, merge, switchMap, takeUntil } from 'rxjs/operators';
-
+import { isPlatformBrowser } from '@angular/common';
 import {
   AfterContentInit,
   AfterViewInit,
   Component,
   ContentChild,
+  ContentChildren,
   ElementRef,
   EventEmitter,
   HostListener,
+  Inject,
   Input,
   OnDestroy,
   Output,
+  PLATFORM_ID,
   Renderer2,
   TemplateRef,
   ViewChild,
   ViewEncapsulation,
-  PLATFORM_ID,
-  Inject,
 } from '@angular/core';
-import { ContentChildren } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+import { fromEvent } from 'rxjs/observable/fromEvent';
+import { interval } from 'rxjs/observable/interval';
+import { bufferCount, debounceTime, merge, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
-import { isPlatformBrowser } from '@angular/common';
 import { onlyOnBrowser } from './only-on.browser';
 
 // if the pane is paned .25, switch to the next pane.
 const PANBOUNDARY = 0.15;
-
-export enum NgxHmRUN_DIRECTION {
-  LEFT = 'left',
-  RIGHT = 'right'
-}
 
 @Component({
   selector: 'ngx-hm-carousel',
@@ -58,7 +52,7 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
   @Input('mourse-enable') mourseEnable = false;
   @Input('autoplay-speed') speed = 5000;
   @Input('between-delay') delay = 8000;
-  @Input('autoplay-direction') direction: NgxHmRUN_DIRECTION = NgxHmRUN_DIRECTION.RIGHT;
+  @Input('autoplay-direction') direction: 'left' | 'right' = 'right';
   private _showNum = 1;
   private isAutoNum = false;
   @Input('show-num')
@@ -203,7 +197,7 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
         this.runProgress(20).pipe(
           tap(() => {
             // console.log('next');
-            if (this.direction === NgxHmRUN_DIRECTION.LEFT) this.currentIndex -= this.scrollNum;
+            if (this.direction === 'left') this.currentIndex -= this.scrollNum;
             else this.currentIndex += this.scrollNum;
           }),
           takeUntil(
@@ -310,14 +304,14 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
 
   private playCycle(index: any) {
     switch (this.direction) {
-      case NgxHmRUN_DIRECTION.LEFT:
+      case 'left':
         if (index === -this.scrollNum) {
           this._viewIndex = this.mostRightIndex;
         } else if (index > this.mostRightIndex || index < 0) {
           this._viewIndex = 0;
         }
         break;
-      case NgxHmRUN_DIRECTION.RIGHT:
+      case 'right':
         if (index === this.mostRightIndex + this.scrollNum) {
           this._viewIndex = 0;
         } else if (index < 0 || this._viewIndex >= this.mostRightIndex) {

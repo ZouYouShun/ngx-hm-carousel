@@ -10,7 +10,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { DragManyComponent } from './drag-many/drag-many.component';
 import { DragOneComponent } from './drag-one/drag-one.component';
-import { NgxHmCarouselModule } from './ngx-hm-carousel/ngx-hm-carousel.module';
+import { NgxHmCarouselModule } from 'ngx-hm-carousel';
 import { SafePipe } from './safe.pipe';
 
 @NgModule({
