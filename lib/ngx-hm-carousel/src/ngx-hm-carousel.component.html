@@ -1,0 +1,38 @@
+<div #parentChild class="carousel">
+  <ng-content select="[ngx-hm-carousel-container]"></ng-content>
+  <!-- left -->
+  <div #prev *ngIf="contentPrev"
+    class="direction left">
+    <ng-container *ngTemplateOutlet="contentPrev"></ng-container>
+  </div>
+  <!--  right -->
+  <div #next *ngIf="contentNext"
+    class="direction right">
+    <ng-container *ngTemplateOutlet="contentNext"></ng-container>
+  </div>
+  <!-- indicators -->
+  <ul class="indicators" *ngIf="dotElm">
+    <li
+      *ngFor="let dot of dots; let i = index;"
+      (click)="setIndex(i)">
+      <ng-container
+        *ngTemplateOutlet="dotElm, context: {
+          $implicit: {
+            index : i,
+            currentIndex : currentIndex
+          }
+        }">
+      </ng-container>
+    </li>
+  </ul>
+  <!-- progress -->
+  <div *ngIf="progressElm && autoplay">
+    <ng-container
+      *ngTemplateOutlet="progressElm, context: {
+        $implicit: {
+          progress:progressWidth
+        }
+      }">
+    </ng-container>
+  </div>
+</div>

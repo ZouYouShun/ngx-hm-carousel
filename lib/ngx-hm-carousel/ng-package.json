@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/ng-packagr/ng-package.schema.json",
+  "src": "./",
+  "dest": "../../dist/ngx-hm-carousel",
+  "workingDirectory": ".ng_build",
+  "lib": {
+    "entryFile": "./public_api.ts"
+  }
+}
