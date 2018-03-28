@@ -239,7 +239,7 @@ because I use material icon, so add material icon CDN
 Collaborators
 -------------
 
-| [![](https://avatars0.githubusercontent.com/u/5878538?s=80&v=4)](https://github.com/ZouYouShun) | [![](https://avatars2.githubusercontent.com/u/12579766?s=80&v=4)](https://github.com/SHANG-TING) | [![](https://avatars2.githubusercontent.com/u/29812800?s=80&v=4)](https://github.com/kevinwang6303) | [![](https://avatars1.githubusercontent.com/u/6997163?s=80&v=4)](https://github.com/XuPeiYao) |
+| [![](https://avatars0.githubusercontent.com/u/5878538?s=80&v=4)](https://github.com/ZouYouShun) | [![](https://avatars2.githubusercontent.com/u/12579766?s=80&v=4)](https://github.com/SHANG-TING) | [![](https://avatars2.githubusercontent.com/u/29812800?s=80&v=4)](https://github.com/kevinwang6303) |
 |-|-|-|-|
-| [@ZouYouShun](https://github.com/ZouYouShun) | [@SHANG-TING](https://github.com/SHANG-TING) | [@kevinwang6303](https://github.com/kevinwang6303) | [@XuPeiYao](https://github.com/XuPeiYao) |
+| [@ZouYouShun](https://github.com/ZouYouShun) | [@SHANG-TING](https://github.com/SHANG-TING) | [@kevinwang6303](https://github.com/kevinwang6303)
 

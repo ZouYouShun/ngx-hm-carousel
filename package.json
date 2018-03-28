@@ -1,60 +1,29 @@
 {
-  "name": "ngx-hm-carousel-demo",
-  "version": "0.0.0",
+  "name": "ngx-hm-carousel",
+  "version": "1.0.2",
+  "ngPackage": {
+    "lib": {
+      "entryFile": "public_api.ts"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZouYouShun/ngx-hm-carousel"
+  },
+  "keywords": [
+    "angular"
+  ],
   "license": "MIT",
-  "scripts": {
-    "ng": "ng",
-    "clean": "rimraf package-lock.json node_modules",
-    "cleanAndUpdate": "npm run clean && ncu -a && ncu -d -a && npm install",
-    "updateAll": "npm install",
-    "build--prod": "ng build --prod --build-optimizer",
-    "start": "ng serve -o",
-    "build": "ng build",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e",
-    "deploy:github": "ng build --prod --build-optimizer --base-href=https://zouyoushun.github.io/ngx-hm-carousel/ && ngh",
-    "ng-packagr": "ng-packagr -p lib/package.json"
+  "main": "./bundles/ngx-hm-carousel.umd.js",
+  "es2015": "./esm2015/ngx-hm-carousel.js",
+  "module": "./esm5/ngx-hm-carousel.es5.js",
+  "typings": "./ngx-hm-carousel.d.ts",
+  "peerDependencies": {
+    "@angular/core": "^5.2.9",
+    "@angular/common": "^5.2.9"
   },
   "dependencies": {
-    "@angular/animations": "^5.2.9",
-    "@angular/cdk": "^5.2.4",
-    "@angular/common": "^5.2.9",
-    "@angular/compiler": "^5.2.9",
-    "@angular/core": "^5.2.9",
-    "@angular/flex-layout": "^5.0.0-beta.13",
-    "@angular/forms": "^5.2.9",
-    "@angular/http": "^5.2.9",
-    "@angular/material": "^5.2.4",
-    "@angular/platform-browser": "^5.2.9",
-    "@angular/platform-browser-dynamic": "^5.2.9",
-    "@angular/router": "^5.2.9",
-    "core-js": "^2.5.3",
     "hammerjs": "^2.0.8",
-    "ngx-hm-carousel": "^1.0.1",
-    "rxjs": "^5.5.7",
-    "zone.js": "^0.8.20"
-  },
-  "devDependencies": {
-    "@angular/cli": "1.7.3",
-    "@angular/compiler-cli": "^5.2.9",
-    "@angular/language-service": "^5.2.9",
-    "@types/hammerjs": "^2.0.35",
-    "@types/jasmine": "~2.8.6",
-    "@types/jasminewd2": "~2.0.3",
-    "@types/node": "~9.6.0",
-    "codelyzer": "^4.2.1",
-    "jasmine-core": "~3.1.0",
-    "jasmine-spec-reporter": "~4.2.1",
-    "karma": "~2.0.0",
-    "karma-chrome-launcher": "~2.2.0",
-    "karma-cli": "~1.0.1",
-    "karma-coverage-istanbul-reporter": "^1.4.2",
-    "karma-jasmine": "~1.1.1",
-    "karma-jasmine-html-reporter": "^1.0.0",
-    "protractor": "~5.3.0",
-    "ts-node": "~5.0.1",
-    "tslint": "~5.9.1",
-    "typescript": "~2.7.2"
+    "@types/hammerjs": "^2.0.35"
   }
 }
