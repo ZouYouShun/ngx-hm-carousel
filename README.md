@@ -6,7 +6,10 @@ A lightweight carousel UI for Angular, support mobile pan by Hammerjs.
 
 This package is design by angular and hammerjs, if you use @angular/material, I strongly recommend you use this package.
 
-depend on [Hammerjs](https://hammerjs.github.io/) and [resize-observer-polyfill](https://github.com/que-etc/resize-observer-polyfill)
+Depend on [Hammerjs](https://hammerjs.github.io/) and [resize-observer-polyfill](https://github.com/que-etc/resize-observer-polyfill)
+
+Upgrade to Angular 6+ and Rxjs6+
+
 
 <img src="https://i.imgur.com/SyyBSR9.gif" width="686">
 
