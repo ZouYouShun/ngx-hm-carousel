@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgxHmCarouselComponent } from './ngx-hm-carousel.component';
+
+import { NgxHmCarouselDynamicDirective } from './ngx-hm-carousel-dynamic.directive';
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
+import { NgxHmCarouselComponent } from './ngx-hm-carousel.component';
 
 
 @NgModule({
@@ -13,10 +15,12 @@ import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
   declarations: [
     NgxHmCarouselComponent,
     NgxHmCarouselItemDirective,
+    NgxHmCarouselDynamicDirective
   ],
   exports: [
     NgxHmCarouselComponent,
     NgxHmCarouselItemDirective,
+    NgxHmCarouselDynamicDirective
   ]
 })
 export class NgxHmCarouselModule { }

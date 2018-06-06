@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
 .ngx-hm-carousel-display-npwrap {
   display: flex !important;
   flex-wrap: nowrap !important;
@@ -9,6 +14,7 @@
   overflow: hidden;
   position: relative;
   width: 100%;
+  height: 100%;
   ul.indicators {
     list-style: none;
     bottom: 1rem;
@@ -47,16 +53,13 @@
 }
 
 .grab {
-  /* 抓抓抓 */
   cursor: grab;
 }
 
 .grabbing {
-  /* 抓住抓住 */
   cursor: grabbing;
 }
 
 .pointer {
-  /* 抓住抓住 */
   cursor: pointer;
 }
