@@ -1,3 +1,7 @@
+## 1.1.1
+
+### Scroll to right
+* **Scroll right change**: Scroll right upto length-showNum.
 ## 1.1.0
 
 ### Dynamic load element

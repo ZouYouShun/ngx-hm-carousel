@@ -187,6 +187,11 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
   private containerResize() {
     this.reSetVariable();
     this.setViewWidth();
+
+    // 因為不能滑了，所以要回到第一個，以確保全部都有顯示
+    if (this.showNum >= this.itemsElm.length) {
+      this.currentIndex = 0;
+    }
     this.drawView(this.currentIndex, false);
   }
 
@@ -320,6 +325,12 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
           break;
         case 'panleft':
         case 'panright':
+
+          // 顯示總數量小於總數量，停止滑動
+          if (this.showNum >= this.itemsElm.length) {
+            this.hammer.stop(true);
+            return;
+          }
           // console.log(e.deltaY);
           this.prePanMove = false;
           if (Math.abs(e.deltaY) > 50) { return; }
@@ -327,6 +338,7 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
           if (!(this.autoplay || this.infinite) && this.outOfBound(e.type)) {
             e.deltaX *= 0.2;
           }
+
           this._renderer.setStyle(this.containerElm, 'left', `${-this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX}px`);
 
           if (!this.isDragMany) {
@@ -362,10 +374,11 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
                 prevIndex = 0;
                 this.drawView(0);
               }
+
               this.currentIndex = prevIndex;
             } else {
-              if (!(this.autoplay || this.infinite) && nextIndex > this.lastIndex) {
-                nextIndex = this.lastIndex;
+              if (!(this.autoplay || this.infinite) && nextIndex > this.lastIndex - this._showNum + 1) {
+                nextIndex = this.lastIndex - this._showNum + 1;
                 this.drawView(nextIndex);
               }
               this.currentIndex = nextIndex;
@@ -462,13 +475,10 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
     }
   }
 
-  private InfiniteHandler2(dleftDistance: number) {
-  }
-
   private outOfBound(type) {
     switch (type) {
       case 'panleft':
-        return this.currentIndex >= this.lastIndex;
+        return this.currentIndex >= this.lastIndex - this._showNum + 1;
       case 'panright':
         return this.currentIndex <= 0;
     }
