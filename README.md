@@ -29,11 +29,11 @@ npm install --save ngx-hm-carousel
 import module:
 
 ```ts
-import { HmCarouselModule } from 'ngx-hm-carousel';
+import { NgxHmCarouselModule } from 'ngx-hm-carousel';
 
 @NgModule({
   imports: [
-    HmCarouselModule
+    NgxHmCarouselModule
   ]
 })
 export class YourModule {}
