@@ -26,9 +26,10 @@ Support Angular 6+ and Rxjs6+
 npm install --save ngx-hm-carousel
 ```
 
-+ Import `NgxY2PlayerModule` into your main AppModule or the module where you want use.
++ Import `NgxHmCarouselModule` into your main AppModule or the module where you want use.
 
 1. Module
+
 ```ts
 import { NgxHmCarouselModule } from 'ngx-hm-carousel';
 
@@ -42,7 +43,6 @@ export class YourModule {}
 
 2. HTML
 
-You can use ngModel to get current index, and set current index very easy!
 
 ```html
 <ngx-hm-carousel
@@ -127,7 +127,7 @@ export class DragOneComponent {
 
 * this project not contain any specile style, you can custom by yourself
 
-```scss
+```css
 .carousel {
   .content {
     display: flex;
@@ -210,19 +210,18 @@ simulate with scrollbar |
 | `aniTime`               | no       | 400                 | number         | ngx-hm-carousel | when `infinite` is true, the animation time with item |
 | `[(ngModel)]`               | no       | 0                 | number         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |
 
-### Methods (Output)
+### Other Directive
 -------
-| Method                                          | Location | Description |
+| Attribute                                          | Location | Description |
 | ----------------------------------------------- | ----------- | ----------- |
 | `carousel-item-click`                           | ngx-hm-carousel > ngx-hm-carousel-container > ngx-hm-carousel-item | item click event, don't use nomal click on the item |
 
-### Other Directive
-
-This Directive will Dynamin load element with previous element and next element and current element.
-
-| Method                                          | Location | Description |
+nomal click with effect the touch event, using this event replace that.
+| Attribute                                          | Location | Description |
 | ----------------------------------------------- | ----------- | ----------- |
 | `ngxHmCarouselDynamic`                           | any tag | It will dynamic load tag with element. |
+
+This Directive will Dynamin load element with previous element and next element and current element.
 
 * Example
 ```html
