@@ -48,18 +48,10 @@
   }
 }
 
-.transition {
-  transition: all .4s ease-in-out;
-}
-
 .grab {
   cursor: grab;
 }
 
 .grabbing {
   cursor: grabbing;
-}
-
-.pointer {
-  cursor: pointer;
 }

@@ -6,17 +6,14 @@ import {
   ContentChild,
   ContentChildren,
   ElementRef,
-  EventEmitter,
   Inject,
   Input,
   OnDestroy,
-  Output,
   PLATFORM_ID,
   QueryList,
   Renderer2,
   TemplateRef,
   ViewChild,
-  ViewEncapsulation,
   forwardRef,
 } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, merge, Subject, Subscription } from 'rxjs';
@@ -39,7 +36,6 @@ const EXE_COUNTER_VALUE_ACCESSOR: any = {
   selector: 'ngx-hm-carousel',
   templateUrl: './ngx-hm-carousel.component.html',
   styleUrls: ['./ngx-hm-carousel.component.scss'],
-  encapsulation: ViewEncapsulation.None,
   providers: [EXE_COUNTER_VALUE_ACCESSOR],
 })
 export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewInit, AfterContentInit, OnDestroy {
