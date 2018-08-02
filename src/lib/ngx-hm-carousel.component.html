@@ -29,9 +29,7 @@
   <div *ngIf="progressElm && autoplay">
     <ng-container
       *ngTemplateOutlet="progressElm, context: {
-        $implicit: {
-          progress:progressWidth
-        }
+        $implicit: progressWidth
       }">
     </ng-container>
   </div>
