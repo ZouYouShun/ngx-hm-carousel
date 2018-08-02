@@ -1,7 +1,20 @@
+## 1.2.0
+
+### Feature
+* **Dynamic Directive**: `ngxHmCarouselDynamic` can load item Dynmain.
+* **infinite option**: Now, you can set infinite to true, make this carousel loop change.
+* **ControlValueAccessor**: You can use ngModel with `ngx-hm-carousel`, more easy to use with index.
+
+## BREAKING CHANGES
+* **current-index**: `current-index` is removed, replace with `ngModel`.
+* **index-change**: `index-change` is removed, replace with `ngModel`.
+
+
 ## 1.1.1
 
 ### Scroll to right
 * **Scroll right change**: Scroll right upto length-showNum.
+
 ## 1.1.0
 
 ### Dynamic load element

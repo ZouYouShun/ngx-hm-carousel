@@ -1,33 +1,34 @@
-# NgxHmCarousel [DEMO](https://zouyoushun.github.io/ngx-hm-carousel)
+# ngx-hm-carousel
 
-A lightweight carousel UI for Angular, support mobile pan by Hammerjs.
+A lightweight carousel UI for Angular, support mobile touch with Hammerjs.
 
-[ZouYouShun/ngx-hm-carousel](https://github.com/ZouYouShun/ngx-hm-carousel)
+## Description
+
+An Carousel that eazy to use with your custom template.
 
 This package is design by angular and hammerjs, if you use @angular/material, I strongly recommend you use this package.
 
 Depend on [Hammerjs](https://hammerjs.github.io/) and [resize-observer-polyfill](https://github.com/que-etc/resize-observer-polyfill)
 
-Upgrade to Angular 6+ and Rxjs6+
+Support Angular 6+ and Rxjs6+
+
+## Example
+[https://alanzouhome.firebaseapp.com/package/NgxHmCarousel](https://alanzouhome.firebaseapp.com/package/NgxHmCarousel)
+
+![](https://res.cloudinary.com/dw7ecdxlp/image/upload/v1533206320/1533206262496_soounq.gif)
+
+![](https://i.imgur.com/SyyBSR9.gif)
 
 
-<img src="https://i.imgur.com/SyyBSR9.gif" width="686">
-
-
-## Installation
-------------
-
-install package
+## Install
 
 ```ts
 npm install --save ngx-hm-carousel
 ```
 
-## Usage
------
++ Import `NgxY2PlayerModule` into your main AppModule or the module where you want use.
 
-import module:
-
+1. Module
 ```ts
 import { NgxHmCarouselModule } from 'ngx-hm-carousel';
 
@@ -39,122 +40,109 @@ import { NgxHmCarouselModule } from 'ngx-hm-carousel';
 export class YourModule {}
 ```
 
-## Examples
---------
+2. HTML
 
-### app.component.html
+You can use ngModel to get current index, and set current index very easy!
 
 ```html
 <ngx-hm-carousel
-  [autoplay-speed]="5000"
+  [(ngModel)]="index"
+  (ngModelChange)="indexChanged($event)"
+  [autoplay-speed]="3000"
   [autoplay]="true"
-  [infinite]="true"
-  [align]="left"
+  [infinite]="infinite"
   [between-delay]="2000"
   class="carousel c-accent">
 
   <section ngx-hm-carousel-container class="content">
     <article class="item cursor-pointer"
-      *ngFor="let item of data"
+      *ngFor="let avatar of avatars"
       ngx-hm-carousel-item>
       <div class="img"
-        [style.backgroundImage]="'url('+item.url+')'">
+        [style.backgroundImage]="'url('+avatar.url+')'">
       </div>
     </article>
   </section>
+
+  <ng-template #carouselPrev>
+    <div class="click-area">
+      <i class="material-icons">keyboard_arrow_left</i>
+    </div>
+  </ng-template>
+  <ng-template #carouselNext>
+    <div class="click-area">
+      <i class="material-icons">keyboard_arrow_right</i>
+    </div>
+  </ng-template>
 
   <ng-template #carouselDot let-model>
     <div class="ball bg-accent"
       [class.visible]="model.index === model.currentIndex"></div>
   </ng-template>
 
-  <ng-template #carouselProgress let-model>
-      <div class="progress" [style.width]="model.progress + '%'"></div>
+  <ng-template #carouselProgress let-progress>
+    <div class="progress" *ngIf="progress > 0"
+    [style.width]="(direction==='right' ? progress : 100 - progress) + '%'"></div>
   </ng-template>
 
 </ngx-hm-carousel>
 ```
 
-### app.component.ts
+2. TS
 
 ```ts
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  selector: 'app-drag-one',
+  templateUrl: './drag-one.component.html',
+  styleUrls: ['./drag-one.component.scss']
 })
-export class AppComponent {
+export class DragOneComponent {
 
-  data = [
-    {
-      'name': 'kristy',
-      'type': 'img',
-      'url': 'http://unsplash.it/600/400?image=940',
-      'defaultUrl': 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      'isDownload': true
-    },
-    {
-      'name': 'kristy',
-      'type': 'img',
-      'url': 'http://unsplash.it/600/400?image=885',
-      'defaultUrl': 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      'isDownload': true
-    },
-    {
-      'name': 'kristy',
-      'type': 'img',
-      'url': 'http://unsplash.it/600/400?image=815',
-      'defaultUrl': 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      'isDownload': true
-    },
-    {
-      'name': 'kristy',
-      'type': 'img',
-      'url': 'http://unsplash.it/600/400?image=401',
-      'defaultUrl': 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      'isDownload': true
-    },
-    {
-      'name': 'kristy',
-      'type': 'img',
-      'url': 'http://unsplash.it/600/400?image=623',
-      'defaultUrl': 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      'isDownload': true
-    },
-    {
-      'name': 'kristy',
-      'type': 'img',
-      'url': 'http://unsplash.it/600/400?image=339',
-      'defaultUrl': 'https://de.aorus.com/upload/Downloads/F_20170531143736CxudUM.JPG',
-      'isDownload': true
-    }
-  ];
+  index = 0;
+  infinite = true;
+  direction = 'right';
+  directionToggle = true;
+  autoplay = true;
+  avatars = '1234567890'.split('').map((x, i) => {
+    const num = i;
+    // const num = Math.floor(Math.random() * 1000);
+    return {
+      url: `https://picsum.photos/600/400/?${num}`,
+      title: `${num}`
+    };
+  });
 
   constructor() { }
 
-  ngOnInit() {
+  indexChanged(index) {
+    console.log(index);
   }
 
-  click($event) {
-    this.cIndex = $event;
-  }
-
-  change($event) {
-    console.log($event);
-  }
 }
 ```
 
-### app.component.scss
+3. SCSS
 
-add your custom css, below is Example.
+* this project not contain any specile style, you can custom by yourself
 
 ```scss
 .carousel {
   .content {
     display: flex;
+    .item {
+      width: 100%;
+      display: block;
+      .img {
+        width: 100%;
+        display: block;
+        background-size: cover;
+        background-position: center;
+        height: 0;
+        padding-bottom: 50%;
+      }
+    }
   }
   .item {
     width: 100%;
@@ -187,36 +175,68 @@ add your custom css, below is Example.
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 2px;
-    background: pink;
+    height: 5px;
+    background: #ff5252;
+  }
+  .click-area {
+    width: 50px;
+    text-align: center;
+    i {
+      font-size: 3em;
+    }
   }
 }
-
 ```
+[View more examples](https://alanzouhome.firebaseapp.com/package/NgxHmCarousel)
 
-[View more examples](zouyoushun.github.io/ngx-hm-carousel)
+## Attribute
 
-
-## Configuration (Input)
+### Configuration (Input)
 -------------
 
-| Argument                 | Required | Default value         | Type            | Location           | Description        |
+| Attribute                 | Necessary | Default value         | Type            | Location           | Description        |
 | ------------------------ | -------- | --------------------- | --------------- | ------------------ | ------------------ |
-| `autoplay`               | no       | false                 | boolean         | carousel-container | carousel auto play confing |
-| `autoplay-speed`         | no       | 5000 (ms)             | number          | carousel-container | auto play speed |
-| `between-delay`          | no       | 8000 (ms)             | number          | carousel-container | each auto play between time |
-| `autoplay-direction`     | no       | 'right'               |'left' or 'right'| carousel-container | auto play direction       |
-| `mourse-enable`          | no       | false                 | boolean         | carousel-container | is mourse moveover stop the auto play |
-| `show-num`               | no       | 1                     | number  or 'auto' | carousel-container | how many number items to show once |
-| `scroll-num`             | no       | 1                     | number          | carousel-container | how many number with each scroll |
-| `drag-many`              | no       | false                 | boolean         | carousel-container | is can once scroll many item, 
+| `autoplay`               | no       | false                 | boolean         | ngx-hm-carousel | carousel auto play confing |
+| `autoplay-speed`         | no       | 5000 (ms)             | number          | ngx-hm-carousel | auto play speed |
+| `between-delay`          | no       | 8000 (ms)             | number          | ngx-hm-carousel | each auto play between time |
+| `autoplay-direction`     | no       | 'right'               |'left' or 'right'| ngx-hm-carousel | auto play direction       |
+| `mourse-enable`          | no       | false                 | boolean         | ngx-hm-carousel | is mourse moveover stop the auto play |
+| `show-num`               | no       | 1                     | number  or 'auto' | ngx-hm-carousel | how many number items to show once |
+| `scroll-num`             | no       | 1                     | number          | ngx-hm-carousel | how many number with each scroll |
+| `drag-many`              | no       | false                 | boolean         | ngx-hm-carousel | is can once scroll many item, 
 simulate with scrollbar |
-| `current-index`          | no       | 0 (The index of first one in the array.) | number         | carousel-container | set the carousel current index |
+| `align`               | no       | 'left'                 | 'left'|'right'|'center' | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
+| `infinite`               | no       | false                 | boolean         | ngx-hm-carousel | is the carousel will move loop |
+| `aniTime`               | no       | 400                 | number         | ngx-hm-carousel | when `infinite` is true, the animation time with item |
+| `[(ngModel)]`               | no       | 0                 | number         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |
 
-## Methods (Output)
+### Methods (Output)
 -------
+| Method                                          | Location | Description |
+| ----------------------------------------------- | ----------- | ----------- |
+| `carousel-item-click`                           | ngx-hm-carousel > ngx-hm-carousel-container > ngx-hm-carousel-item | item click event, don't use nomal click on the item |
+
+### Other Directive
+
+This Directive will Dynamin load element with previous element and next element and current element.
 
 | Method                                          | Location | Description |
 | ----------------------------------------------- | ----------- | ----------- |
-| `index-change`                                  | carousel-container | when index change, it will emit now index |
-| `carousel-item-click`                           | carousel-items-container > carousel-item | item click event, don't use nomal click on the item |
+| `ngxHmCarouselDynamic`                           | any tag | It will dynamic load tag with element. |
+
+* Example
+```html
+<section ngx-hm-carousel-container class="content">
+  <article class="item cursor-pointer"
+    *ngFor="let item of data; let i = index"
+    ngx-hm-carousel-item>
+    <div *ngxHmCarouselDynamic="i; length: data.length; index: currentI"
+      class="img" [style.backgroundImage]="item.url">
+    </div>
+  </article>
+</section>
+```
+1. first data is this data index
+2. length is ths total length with array
+3. index is now index
+
