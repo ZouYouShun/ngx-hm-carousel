@@ -17,23 +17,32 @@ import {
   TemplateRef,
   ViewChild,
   ViewEncapsulation,
+  forwardRef,
 } from '@angular/core';
 import { BehaviorSubject, Observable, fromEvent, interval, merge, Subject, Subscription } from 'rxjs';
 import { bufferCount, debounceTime, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { resizeObservable } from './rxjs.observable.resize';
+import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 
 // if the pane is paned .25, switch to the next pane.
 const PANBOUNDARY = 0.15;
+
+const EXE_COUNTER_VALUE_ACCESSOR: any = {
+  provide: NG_VALUE_ACCESSOR,
+  useExisting: forwardRef(() => NgxHmCarouselComponent),
+  multi: true
+};
 
 @Component({
   selector: 'ngx-hm-carousel',
   templateUrl: './ngx-hm-carousel.component.html',
   styleUrls: ['./ngx-hm-carousel.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  providers: [EXE_COUNTER_VALUE_ACCESSOR],
 })
-export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, OnDestroy {
+export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewInit, AfterContentInit, OnDestroy {
   @ViewChild('parentChild') parentChild;
   @ViewChild('prev') private btnPrev: ElementRef;
   @ViewChild('next') private btnNext: ElementRef;
@@ -50,14 +59,13 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
     this._infinite = value;
     if (this.LatestElm_clone) {
       this.addStyle(this.LatestElm_clone, {
-        visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
+        visibility: this.runLoop ? 'visible' : 'hidden'
       });
     }
     if (this.firstElm_clone) {
       this.addStyle(this.firstElm_clone, {
-        visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
+        visibility: this.runLoop ? 'visible' : 'hidden'
       });
-
     }
   }
   get infinite() {
@@ -80,18 +88,20 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
   }
   @Input('scroll-num') scrollNum = 1;
   @Input('drag-many') isDragMany = false;
-  @Input('current-index')
   set currentIndex(value) {
+
     // if now index if not equale to save index, do someting
     if (this.currentIndex !== value) {
       this._currentIndex = value;
-
       if (this.itemsElm) {
         if (this.autoplay && !this.isFromAuto) {
           this.stopEvent.next();
           this.restart.next(null);
         }
         this.drawView(this.currentIndex);
+      }
+      if (0 <= this.currentIndex && this.currentIndex <= this.lastIndex) {
+        this.onChange(this.currentIndex);
       }
     }
     this.isFromAuto = false;
@@ -122,7 +132,6 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
     return this._autoplay;
   }
 
-  @Output('index-change') indexChanged = new EventEmitter();
   set progressWidth(value) {
     if (this.progressElm !== undefined && this.autoplay) {
       this._porgressWidth = value;
@@ -130,6 +139,10 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
   }
   get progressWidth() {
     return this._porgressWidth;
+  }
+
+  get runLoop() {
+    return this.autoplay || this.infinite;
   }
 
   private isFromAuto = true;
@@ -184,39 +197,6 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
     this.elmSub$ = resizeObservable(this.rootElm, () => this.containerResize()).subscribe();
   }
 
-  private addInfiniteElm() {
-    this.firstElm_clone = this.itemsElm[this.lastIndex].cloneNode(true) as HTMLElement;
-    this.addStyle(this.firstElm_clone, {
-      position: 'absolute',
-      transform: 'translateX(-100%)',
-      visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
-    });
-
-
-    this.LatestElm_clone = this.itemsElm[0].cloneNode(true) as HTMLElement;
-    this.addStyle(this.LatestElm_clone, {
-      position: 'absolute',
-      right: 0,
-      top: 0,
-      transform: 'translateX(100%)',
-      visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
-    });
-
-
-    this._renderer.insertBefore(this.containerElm, this.firstElm_clone, this.itemsElm[0]);
-    this._renderer.appendChild(this.containerElm, this.LatestElm_clone);
-  }
-
-  private containerResize() {
-    this.reSetVariable();
-    this.setViewWidth();
-
-    // 因為不能滑了，所以要回到第一個，以確保全部都有顯示
-    if (this.showNum >= this.itemsElm.length) {
-      this.currentIndex = 0;
-    }
-    this.drawView(this.currentIndex, false);
-  }
 
   ngOnDestroy() {
     if (this.btnNext && this.btnPrev) {
@@ -233,6 +213,46 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
 
   setIndex(i) {
     this.currentIndex = i;
+  }
+
+  writeValue(value: any) { if (value || value === 0) { this.currentIndex = value; } }
+  registerOnChange(fn: (value: any) => any) { this.onChange = fn; }
+  registerOnTouched(fn: () => any) { this.onTouched = fn; }
+  private onChange = (_: any) => { };
+  private onTouched = () => { };
+
+  private addInfiniteElm() {
+    this.firstElm_clone = this.itemsElm[this.lastIndex].cloneNode(true) as HTMLElement;
+    this.addStyle(this.firstElm_clone, {
+      position: 'absolute',
+      transform: 'translateX(-100%)',
+      visibility: this.runLoop ? 'visible' : 'hidden'
+    });
+
+
+    this.LatestElm_clone = this.itemsElm[0].cloneNode(true) as HTMLElement;
+    this.addStyle(this.LatestElm_clone, {
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      transform: 'translateX(100%)',
+      visibility: this.runLoop ? 'visible' : 'hidden'
+    });
+
+
+    this._renderer.insertBefore(this.containerElm, this.firstElm_clone, this.itemsElm[0]);
+    this._renderer.appendChild(this.containerElm, this.LatestElm_clone);
+  }
+
+  private containerResize() {
+    this.reSetVariable();
+    this.setViewWidth();
+
+    // 因為不能滑了，所以要回到第一個，以確保全部都有顯示
+    if (this.showNum >= this.itemsElm.length) {
+      this.currentIndex = 0;
+    }
+    this.drawView(this.currentIndex, false);
   }
 
   private initVariable() {
@@ -357,7 +377,7 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
           this.prePanMove = false;
           if (Math.abs(e.deltaY) > 50) { return; }
           // Slow down at the first and last pane.
-          if (!(this.autoplay || this.infinite) && this.outOfBound(e.type)) {
+          if (!this.runLoop && this.outOfBound(e.type)) {
             e.deltaX *= 0.2;
           }
 
@@ -392,14 +412,14 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
             // 如果不是無限循環，不能大於或小於
 
             if (e.deltaX > 0) {
-              if (!(this.autoplay || this.infinite) && prevIndex < 0) {
+              if (!this.runLoop && prevIndex < 0) {
                 prevIndex = 0;
                 this.drawView(0);
               }
 
               this.currentIndex = prevIndex;
             } else {
-              if (!(this.autoplay || this.infinite) && nextIndex > this.lastIndex - this._showNum + 1) {
+              if (!this.runLoop && nextIndex > this.lastIndex - this._showNum + 1) {
                 nextIndex = this.lastIndex - this._showNum + 1;
                 this.drawView(nextIndex);
               }
@@ -448,52 +468,55 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
     }
   }
 
-  private drawView(index: number, isEmit = true) {
-    const lastIndex = this.lastIndex;
-
-    if (this.autoplay || this.infinite) {
-      if (index < 0) {
-        this._currentIndex = lastIndex;
-      } else if (index > lastIndex) {
-        this._currentIndex = 0;
-      }
-    } else {
-      this._currentIndex = Math.max(0, Math.min(index, this.lastIndex));
-    }
+  private drawView(index: number, isAnimation = true) {
 
     // move element only on length is more than 1
     if (this.itemsElm.length > 1) {
       const leftDistance = (index * this.elmWidth) - this.alignDistance;
 
       this._renderer.setStyle(this.containerElm, 'left', `${-leftDistance}px`);
-      if (isEmit) {
+      if (isAnimation) {
         this._renderer.addClass(this.containerElm, 'transition');
-        this.indexChanged.emit(this.currentIndex);
       } else {
         this._renderer.removeClass(this.containerElm, 'transition');
       }
 
       // 如果是循環的，當動畫結束偷偷的跳到當前的index、left去
-      this.InfiniteHandler(index, lastIndex);
+      this.InfiniteHandler(index);
     } else {
       this._renderer.setStyle(this.containerElm, 'left', `${this.alignDistance}px`);
     }
 
   }
 
-  private InfiniteHandler(index: number, lastIndex: number) {
-    if ((this.autoplay || this.infinite)) {
-      setTimeout(() => {
-        this._renderer.removeClass(this.containerElm, 'transition');
-        // 如果是循環的，當動畫結束偷偷的跳到當前的index、left去
-        let distance = 0;
-        if (index <= -1) {
-          distance = (lastIndex * this.elmWidth) - this.alignDistance;
-          this._renderer.setStyle(this.containerElm, 'left', `${-distance}px`);
-        } else if (index > lastIndex) {
-          this._renderer.setStyle(this.containerElm, 'left', `0px`);
+  private InfiniteHandler(index: number) {
+    if (this.runLoop) {
+      let state = 0;
+      state = (index < 0) ? -1 : state;
+      state = (index > this.lastIndex) ? 1 : state;
+      if (state !== 0) {
+        switch (state) {
+          case -1:
+            this._currentIndex = this.lastIndex;
+            break;
+          case 1:
+            this._currentIndex = 0;
+            break;
         }
-      }, this.aniTime);
+        setTimeout(() => {
+          // 如果是循環的，當動畫結束偷偷的跳到當前的index、left去
+          this._renderer.removeClass(this.containerElm, 'transition');
+          switch (state) {
+            case -1:
+              const distance = (this.lastIndex * this.elmWidth) - this.alignDistance;
+              this._renderer.setStyle(this.containerElm, 'left', `${-distance}px`);
+              break;
+            case 1:
+              this._renderer.setStyle(this.containerElm, 'left', `0px`);
+              break;
+          }
+        }, this.aniTime);
+      }
     }
   }
 
