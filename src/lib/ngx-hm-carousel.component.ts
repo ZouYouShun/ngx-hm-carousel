@@ -45,7 +45,24 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
 
   @Input('aniTime') aniTime = 400;
   @Input('align') align: 'left' | 'center' | 'right' = 'center';
-  @Input('infinite') infinite = false;
+  @Input('infinite')
+  set infinite(value) {
+    this._infinite = value;
+    if (this.LatestElm_clone) {
+      this.addStyle(this.LatestElm_clone, {
+        visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
+      });
+    }
+    if (this.firstElm_clone) {
+      this.addStyle(this.firstElm_clone, {
+        visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
+      });
+
+    }
+  }
+  get infinite() {
+    return this._infinite;
+  }
   @Input('mourse-enable') mourseEnable = false;
   @Input('autoplay-speed') speed = 5000;
   @Input('between-delay') delay = 8000;
@@ -96,6 +113,10 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
       }
     }
     this._autoplay = value;
+    // if set autoplay, then the infinite is true
+    if (this.autoplay) {
+      this.infinite = true;
+    }
   }
   get autoplay() {
     return this._autoplay;
@@ -113,6 +134,7 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
 
   private isFromAuto = true;
   private _currentIndex = 0;
+  private _infinite = false;
   private _showNum = 1;
   private isAutoNum = false;
   private _autoplay = false;
@@ -157,9 +179,7 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
     this.drawView(this.currentIndex);
     this.bindClick();
 
-    if (this.autoplay || this.infinite) {
-      this.addInfiniteElm();
-    }
+    this.addInfiniteElm();
 
     this.elmSub$ = resizeObservable(this.rootElm, () => this.containerResize()).subscribe();
   }
@@ -168,7 +188,8 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
     this.firstElm_clone = this.itemsElm[this.lastIndex].cloneNode(true) as HTMLElement;
     this.addStyle(this.firstElm_clone, {
       position: 'absolute',
-      transform: 'translateX(-100%)'
+      transform: 'translateX(-100%)',
+      visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
     });
 
 
@@ -177,8 +198,10 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
       position: 'absolute',
       right: 0,
       top: 0,
-      transform: 'translateX(100%)'
+      transform: 'translateX(100%)',
+      visibility: (this.autoplay || this.infinite) ? 'visible' : 'hidden'
     });
+
 
     this._renderer.insertBefore(this.containerElm, this.firstElm_clone, this.itemsElm[0]);
     this._renderer.appendChild(this.containerElm, this.LatestElm_clone);
@@ -277,7 +300,6 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
           break;
       }
     }
-    // console.log(this.alignDistance);
   }
 
   private setViewWidth(isInit?: boolean) {
@@ -439,7 +461,7 @@ export class NgxHmCarouselComponent implements AfterViewInit, AfterContentInit, 
       this._currentIndex = Math.max(0, Math.min(index, this.lastIndex));
     }
 
-    // 只有當大於1才要移動
+    // move element only on length is more than 1
     if (this.itemsElm.length > 1) {
       const leftDistance = (index * this.elmWidth) - this.alignDistance;
 
