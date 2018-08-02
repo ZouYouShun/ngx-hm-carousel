@@ -88,8 +88,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
   @Input('scroll-num') scrollNum = 1;
   @Input('drag-many') isDragMany = false;
-  set currentIndex(value) {
 
+  set currentIndex(value) {
     // if now index if not equale to save index, do someting
     if (this.currentIndex !== value) {
       this._currentIndex = value;
@@ -143,6 +143,22 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   get runLoop() {
     return this.autoplay || this.infinite;
+  }
+
+  get maxRightIndex() {
+    let addIndex = 0;
+    switch (this.align) {
+      case 'left':
+        addIndex = 0;
+        break;
+      case 'center':
+        addIndex = <number>this.showNum - 1;
+        break;
+      case 'right':
+        addIndex = <number>this.showNum - 1;
+        break;
+    }
+    return (this.lastIndex - this._showNum + 1) + addIndex;
   }
 
   private isFromAuto = true;
@@ -355,10 +371,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     hm.on('panleft panright panend tap', (e: HammerInput) => {
       this._renderer.removeClass(this.containerElm, 'transition');
       this._renderer.addClass(this.containerElm, 'grabbing');
-      if (this.autoplay) {
-        this.stopEvent.next();
-      }
-      // console.log(e.type);
+
+      if (this.autoplay) { this.stopEvent.next(); }
+
       switch (e.type) {
         case 'tap':
           this.callClick(e.center.x);
@@ -419,8 +434,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
               this.currentIndex = prevIndex;
             } else {
-              if (!this.runLoop && nextIndex > this.lastIndex - this._showNum + 1) {
-                nextIndex = this.lastIndex - this._showNum + 1;
+              if (!this.runLoop && nextIndex > this.maxRightIndex) {
+                nextIndex = this.maxRightIndex;
                 this.drawView(nextIndex);
               }
               this.currentIndex = nextIndex;
@@ -523,7 +538,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private outOfBound(type) {
     switch (type) {
       case 'panleft':
-        return this.currentIndex >= this.lastIndex - this._showNum + 1;
+        return this.currentIndex >= this.maxRightIndex;
       case 'panright':
         return this.currentIndex <= 0;
     }
