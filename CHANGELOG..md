@@ -1,3 +1,8 @@
+## 1.2.1
+
+### Bug Fix
+* **ng build --prod**: fix problem with ng build --prod.
+
 ## 1.2.0
 
 ### Feature
