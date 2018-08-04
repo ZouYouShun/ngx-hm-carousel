@@ -26,8 +26,6 @@ Support Angular 6+ and Rxjs6+
 npm install --save ngx-hm-carousel
 ```
 
-+ Import `NgxHmCarouselModule` into your main AppModule or the module where you want use.
-
 1. HammerJs
 
 + Import `hammerjs` in your main.ts or app.module.ts;
@@ -44,6 +42,7 @@ import { environment } from './environments/environment';
 ...
 ```
 
++ Import `NgxHmCarouselModule` into your main AppModule or the module where you want use.
 
 1. Module
 
