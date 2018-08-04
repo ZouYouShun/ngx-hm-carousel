@@ -28,6 +28,23 @@ npm install --save ngx-hm-carousel
 
 + Import `NgxHmCarouselModule` into your main AppModule or the module where you want use.
 
+1. HammerJs
+
++ Import `hammerjs` in your main.ts or app.module.ts;
+
+```ts
+import 'hammerjs';
+
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+import { AppModule } from './app/app.module';
+import { environment } from './environments/environment';
+...
+...
+```
+
+
 1. Module
 
 ```ts
