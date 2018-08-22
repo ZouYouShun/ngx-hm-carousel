@@ -230,7 +230,7 @@ simulate with scrollbar |
 -------
 | Attribute                                          | Location | Description |
 | ----------------------------------------------- | ----------- | ----------- |
-| `carousel-item-click`                           | ngx-hm-carousel > ngx-hm-carousel-container > ngx-hm-carousel-item | item click event, don't use nomal click on the item |
+| `(ngx-hm-carousel-item)`                           | ngx-hm-carousel > ngx-hm-carousel-container > ngx-hm-carousel-item | item click event, don't use nomal click on the item |
 
 nomal click with effect the touch event, using this event replace that.
 
