@@ -120,9 +120,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
     this._autoplay = value;
     // if set autoplay, then the infinite is true
-    if (this.autoplay) {
-      this.infinite = true;
-    }
+    this.infinite = this.autoplay;
   }
   get autoplay() {
     return this._autoplay;
@@ -261,7 +259,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     this.setViewWidth();
 
     // 因為不能滑了，所以要回到第一個，以確保全部都有顯示
-    if (this.showNum >= this.itemsElm.length) {
+    if (this.align !== 'center' && this.showNum >= this.itemsElm.length) {
       this.currentIndex = 0;
     }
     this.drawView(this.currentIndex, false);
@@ -380,7 +378,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         case 'panright':
 
           // 顯示總數量小於總數量，停止滑動
-          if (this.showNum >= this.itemsElm.length) {
+          if (this.align !== 'center' && this.showNum >= this.itemsElm.length) {
             this.hammer.stop(true);
             return;
           }

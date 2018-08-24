@@ -1,3 +1,9 @@
+## 1.2.2
+
+### Bug Fix
+* **align center**: when align set to 'center', always can drag move.
+* **auto play**: infinite always changed with autoplay.
+
 ## 1.2.1
 
 ### Bug Fix
