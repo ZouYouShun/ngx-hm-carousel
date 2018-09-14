@@ -1,3 +1,8 @@
+## 1.2.3
+
+### Feature
+* **Speed Change Dynamically**: Now you can change input[autoplay-speed] to change speed dynamically.
+
 ## 1.2.2
 
 ### Bug Fix

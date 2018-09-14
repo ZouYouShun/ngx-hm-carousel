@@ -68,7 +68,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     return this._infinite;
   }
   @Input('mourse-enable') mourseEnable = false;
-  @Input('autoplay-speed') speed = 5000;
+  @Input('autoplay-speed')
+  public get speed() {
+    return this.speedChange.value;
+  }
+  public set speed(value) {
+    this.speedChange.next(value);
+  }
   @Input('between-delay') delay = 8000;
   @Input('autoplay-direction') direction: 'left' | 'right' = 'right';
   @Input('show-num')
@@ -187,6 +193,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private nextListener: () => void;
   private prevListener: () => void;
 
+  private speedChange = new BehaviorSubject(5000);
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private _renderer: Renderer2) { }
@@ -294,6 +301,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
     this.doNext = startEvent.pipe(
       debounceTime(this.delay),
+      switchMap(() => this.speedChange),
       switchMap(() =>
         this.runProgress(20).pipe(
           tap(() => {
