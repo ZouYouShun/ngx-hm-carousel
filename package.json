@@ -1,6 +1,6 @@
 {
   "name": "ngx-hm-carousel",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "dependencies": {
     "resize-observer-polyfill": "^1.5.0",
     "hammerjs": "^2.0.8"

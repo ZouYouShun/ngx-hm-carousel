@@ -386,7 +386,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     hm.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL });
 
     hm.on('panleft panright panend', (e: HammerInput) => {
-      console.log(e.type);
+      // console.log(e.type);
       this._renderer.removeClass(this.containerElm, 'transition');
 
       if (this.autoplay) { this.stopEvent.next(); }
