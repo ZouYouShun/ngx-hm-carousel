@@ -1,3 +1,10 @@
+## 1.2.5
+
+### Bug fix
+* **When item is smaller than length the mask non remove**: fix bug when show number is more than item langth, mask click don't remove.
+
+* **Mask bug fix**: Fix mask bug with grab.
+
 ## 1.2.4
 
 ### Break Change

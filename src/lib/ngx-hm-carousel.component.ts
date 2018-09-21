@@ -173,7 +173,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private lastIndex = 0;
   private hammer: HammerManager;
   private elmWidth = 0;
-  private container_left = 0;
+  // private container_left = 0;
 
   private mouseOnContainer = false;
   private restart = new BehaviorSubject<any>(null);
@@ -185,7 +185,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   private firstElm_clone: HTMLElement;
   private LatestElm_clone: HTMLElement;
-  private prePanMove: boolean;
+  // private prePanMove: boolean;
   public dots: Array<number>;
   private nextListener: () => void;
   private prevListener: () => void;
@@ -206,7 +206,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     this._grabbing = value;
   }
 
-  // @Output() stateChanges = new EventEmitter();
+  private set left(value) {
+    this._renderer.setStyle(this.containerElm, 'left', `${value}px`);
+  }
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -338,7 +340,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private reSetVariable() {
-    this.container_left = this.rootElm.getBoundingClientRect().left;
     if (this.showNum && this.showNum !== 1) {
       switch (this.align) {
         case 'center':
@@ -384,36 +385,31 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     const hm = new Hammer(this.containerElm);
     hm.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL });
 
-    hm.on('panleft panright panend tap', (e: HammerInput) => {
+    hm.on('panleft panright panend', (e: HammerInput) => {
+      console.log(e.type);
       this._renderer.removeClass(this.containerElm, 'transition');
-      this.grabbing = true;
 
       if (this.autoplay) { this.stopEvent.next(); }
 
       switch (e.type) {
-        case 'tap':
-          // this.callClick(e.center.x);
-          this.grabbing = false;
-          break;
         case 'panleft':
         case 'panright':
-
-          // 顯示總數量小於總數量，停止滑動
+          this.grabbing = true;
+          // When show-num is bigger than length, stop hammer
           if (this.align !== 'center' && this.showNum >= this.itemsElm.length) {
+            this.grabbing = false;
             this.hammer.stop(true);
             return;
           }
-          // console.log(e.deltaY);
-          this.prePanMove = false;
-          if (Math.abs(e.deltaY) > 50) { return; }
           // Slow down at the first and last pane.
           if (!this.runLoop && this.outOfBound(e.type)) {
             e.deltaX *= 0.2;
           }
 
-          this._renderer.setStyle(this.containerElm, 'left', `${-this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX}px`);
+          this.left = -this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX;
 
-          if (!this.isDragMany) {
+          // if not dragmany, when bigger than half
+          if (!this.isDragMany || Math.abs(e.deltaY) > 50) {
             if (Math.abs(e.deltaX) > this.elmWidth * 0.5) {
               if (e.deltaX > 0) {
                 this.currentIndex -= this.scrollNum;
@@ -422,13 +418,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
               }
               this.grabbing = false;
               this.hammer.stop(true);
-              // remember prv action, to avoid hammer stop, then click
-              this.prePanMove = true;
+              return;
             }
           }
           break;
         case 'panend':
           this.grabbing = false;
+
           if (Math.abs(e.deltaX) > this.elmWidth * PANBOUNDARY) {
             const moveNum = this.isDragMany ?
               Math.ceil(Math.abs(e.deltaX) / this.elmWidth) : this.scrollNum;
@@ -453,14 +449,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
               this.currentIndex = nextIndex;
             }
             break;
-          } else {
-            // if (!this.isDragMany && this.prePanMove) {
-            //   this.callClick(e.center.x);
-            // }
           }
-          // console.log(this.currentIndex);
           this.drawView(this.currentIndex);
-          this.prePanMove = false;
           break;
       }
     });
@@ -485,33 +475,20 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
   }
 
-  // private callClick(positionX) {
-  //   // click position subtract the containerlef and alignDistance is the move distance
-  //   const toIndex = this.currentIndex + Math.floor((positionX - this.container_left - this.alignDistance) / this.elmWidth);
-
-  //   const elm = this.items.toArray()[toIndex];
-  //   if (elm) {
-  //     elm.clickEvent.emit(toIndex);
-  //   }
-  // }
-
   private drawView(index: number, isAnimation = true) {
 
     // move element only on length is more than 1
     if (this.itemsElm.length > 1) {
-      const leftDistance = (index * this.elmWidth) - this.alignDistance;
-
-      this._renderer.setStyle(this.containerElm, 'left', `${-leftDistance}px`);
+      this.left = -((index * this.elmWidth) - this.alignDistance);
       if (isAnimation) {
         this._renderer.addClass(this.containerElm, 'transition');
       } else {
         this._renderer.removeClass(this.containerElm, 'transition');
       }
-
       // 如果是循環的，當動畫結束偷偷的跳到當前的index、left去
       this.InfiniteHandler(index);
     } else {
-      this._renderer.setStyle(this.containerElm, 'left', `${this.alignDistance}px`);
+      this.left = this.alignDistance;
     }
 
   }
@@ -536,10 +513,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           switch (state) {
             case -1:
               const distance = (this.lastIndex * this.elmWidth) - this.alignDistance;
-              this._renderer.setStyle(this.containerElm, 'left', `${-distance}px`);
+              this.left = -distance;
               break;
             case 1:
-              this._renderer.setStyle(this.containerElm, 'left', `0px`);
+              this.left = 0;
               break;
           }
         }, this.aniTime);
