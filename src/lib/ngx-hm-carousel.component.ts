@@ -4,24 +4,21 @@ import {
   AfterViewInit,
   Component,
   ContentChild,
-  ContentChildren,
   ElementRef,
+  forwardRef,
   Inject,
   Input,
   OnDestroy,
   PLATFORM_ID,
-  QueryList,
   Renderer2,
   TemplateRef,
   ViewChild,
-  forwardRef,
 } from '@angular/core';
-import { BehaviorSubject, Observable, fromEvent, interval, merge, Subject, Subscription } from 'rxjs';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { BehaviorSubject, fromEvent, interval, merge, Observable, Subject, Subscription } from 'rxjs';
 import { bufferCount, debounceTime, switchMap, takeUntil, tap } from 'rxjs/operators';
 
-import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { resizeObservable } from './rxjs.observable.resize';
-import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 
 // if the pane is paned .25, switch to the next pane.
 const PANBOUNDARY = 0.15;
@@ -42,7 +39,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @ViewChild('parentChild') parentChild;
   @ViewChild('prev') private btnPrev: ElementRef;
   @ViewChild('next') private btnNext: ElementRef;
-  @ContentChildren(NgxHmCarouselItemDirective) items: QueryList<NgxHmCarouselItemDirective>;
+  // @ContentChildren(NgxHmCarouselItemDirective) items: QueryList<NgxHmCarouselItemDirective>;
   @ContentChild('carouselPrev') contentPrev: TemplateRef<any>;
   @ContentChild('carouselNext') contentNext: TemplateRef<any>;
   @ContentChild('carouselDot') dotElm: TemplateRef<any>;
@@ -141,11 +138,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     return this._porgressWidth;
   }
 
-  get runLoop() {
-    return this.autoplay || this.infinite;
-  }
-
-  get maxRightIndex() {
+  private get maxRightIndex() {
     let addIndex = 0;
     switch (this.align) {
       case 'left':
@@ -159,6 +152,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         break;
     }
     return (this.lastIndex - this._showNum + 1) + addIndex;
+  }
+
+  private get runLoop() {
+    return this.autoplay || this.infinite;
   }
 
   private isFromAuto = true;
@@ -186,14 +183,31 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private doNextSub$: Subscription;
   private elmSub$: Subscription;
 
-  private firstElm_clone;
-  private LatestElm_clone;
+  private firstElm_clone: HTMLElement;
+  private LatestElm_clone: HTMLElement;
   private prePanMove: boolean;
   public dots: Array<number>;
   private nextListener: () => void;
   private prevListener: () => void;
 
   private speedChange = new BehaviorSubject(5000);
+
+  private _grabbing = false;
+  get grabbing() {
+    return this._grabbing;
+  }
+  set grabbing(value) {
+    if (value) {
+      this._renderer.addClass(this.containerElm, 'grabbing');
+    } else {
+      this.callRestart();
+      this._renderer.removeClass(this.containerElm, 'grabbing');
+    }
+    this._grabbing = value;
+  }
+
+  // @Output() stateChanges = new EventEmitter();
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private _renderer: Renderer2) { }
@@ -372,15 +386,14 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
     hm.on('panleft panright panend tap', (e: HammerInput) => {
       this._renderer.removeClass(this.containerElm, 'transition');
-      this._renderer.addClass(this.containerElm, 'grabbing');
+      this.grabbing = true;
 
       if (this.autoplay) { this.stopEvent.next(); }
 
       switch (e.type) {
         case 'tap':
-          this.callClick(e.center.x);
-          this.callRestart();
-          this._renderer.removeClass(this.containerElm, 'grabbing');
+          // this.callClick(e.center.x);
+          this.grabbing = false;
           break;
         case 'panleft':
         case 'panright':
@@ -407,8 +420,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
               } else {
                 this.currentIndex += this.scrollNum;
               }
-              this._renderer.removeClass(this.containerElm, 'grabbing');
-              this.callRestart();
+              this.grabbing = false;
               this.hammer.stop(true);
               // remember prv action, to avoid hammer stop, then click
               this.prePanMove = true;
@@ -416,9 +428,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           }
           break;
         case 'panend':
-          this.callRestart();
-
-          this._renderer.removeClass(this.containerElm, 'grabbing');
+          this.grabbing = false;
           if (Math.abs(e.deltaX) > this.elmWidth * PANBOUNDARY) {
             const moveNum = this.isDragMany ?
               Math.ceil(Math.abs(e.deltaX) / this.elmWidth) : this.scrollNum;
@@ -444,9 +454,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             }
             break;
           } else {
-            if (!this.isDragMany && this.prePanMove) {
-              this.callClick(e.center.x);
-            }
+            // if (!this.isDragMany && this.prePanMove) {
+            //   this.callClick(e.center.x);
+            // }
           }
           // console.log(this.currentIndex);
           this.drawView(this.currentIndex);
@@ -475,15 +485,15 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
   }
 
-  private callClick(positionX) {
-    // click position subtract the containerlef and alignDistance is the move distance
-    const toIndex = this.currentIndex + Math.floor((positionX - this.container_left - this.alignDistance) / this.elmWidth);
+  // private callClick(positionX) {
+  //   // click position subtract the containerlef and alignDistance is the move distance
+  //   const toIndex = this.currentIndex + Math.floor((positionX - this.container_left - this.alignDistance) / this.elmWidth);
 
-    const elm = this.items.toArray()[toIndex];
-    if (elm) {
-      elm.clickEvent.emit(toIndex);
-    }
-  }
+  //   const elm = this.items.toArray()[toIndex];
+  //   if (elm) {
+  //     elm.clickEvent.emit(toIndex);
+  //   }
+  // }
 
   private drawView(index: number, isAnimation = true) {
 

@@ -1,3 +1,8 @@
+## 1.2.4
+
+### Break Change
+* **Remove ngx-hm-carousel-item**: remove item directive in the container, just the first child of container is the item, and we can use nomal click event in the content.
+
 ## 1.2.3
 
 ### Feature

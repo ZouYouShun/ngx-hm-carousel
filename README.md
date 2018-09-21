@@ -72,8 +72,7 @@ export class YourModule {}
 
   <section ngx-hm-carousel-container class="content">
     <article class="item cursor-pointer"
-      *ngFor="let avatar of avatars"
-      ngx-hm-carousel-item>
+      *ngFor="let avatar of avatars">
       <div class="img"
         [style.backgroundImage]="'url('+avatar.url+')'">
       </div>
@@ -227,10 +226,7 @@ simulate with scrollbar |
 | `[(ngModel)]`               | no       | 0                 | number         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |
 
 ### Other Directive
--------
-| Attribute                                          | Location | Description |
-| ----------------------------------------------- | ----------- | ----------- |
-| `(ngx-hm-carousel-item)`                           | ngx-hm-carousel > ngx-hm-carousel-container > ngx-hm-carousel-item | item click event, don't use nomal click on the item |
+
 
 nomal click with effect the touch event, using this event replace that.
 
@@ -244,8 +240,7 @@ This Directive will Dynamin load element with previous element and next element 
 ```html
 <section ngx-hm-carousel-container class="content">
   <article class="item cursor-pointer"
-    *ngFor="let item of data; let i = index"
-    ngx-hm-carousel-item>
+    *ngFor="let item of data; let i = index">
     <div *ngxHmCarouselDynamic="i; length: data.length; index: currentI"
       class="img" [style.backgroundImage]="item.url">
     </div>
