@@ -1,3 +1,9 @@
+## 1.2.7
+
+### Bug fix
+* **Fix infinite problem with next and prev click**: fix error with infinite .
+* **Fix mask not clear problem**: when drag occur, we use an mask to avoid click event emit, but it will not clear when drag end, add pancancel to fix that.
+
 ## 1.2.6
 
 ### Bug fix

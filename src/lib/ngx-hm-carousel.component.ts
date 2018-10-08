@@ -90,7 +90,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   set currentIndex(value) {
     // if now index if not equale to save index, do someting
+
     if (this.currentIndex !== value) {
+
+      // if the value is not contain with the boundary not handler
+      if (!this.runLoop && !(0 <= value && value <= this.lastIndex)) {
+        return;
+      }
       this._currentIndex = value;
       if (this.itemsElm) {
         if (this.autoplay && !this.isFromAuto) {
@@ -123,7 +129,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
     this._autoplay = value;
     // if set autoplay, then the infinite is true
-    this.infinite = this.autoplay;
+    if (value) {
+      this._tmpInfinite = this.infinite;
+      this.infinite = true;
+    } else {
+      this.infinite = this._tmpInfinite;
+    }
   }
   get autoplay() {
     return this._autoplay;
@@ -161,6 +172,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private isFromAuto = true;
   private _currentIndex = 0;
   private _infinite = false;
+  private _tmpInfinite = false;
   private _showNum = 1;
   private isAutoNum = false;
   private _autoplay = false;
@@ -385,7 +397,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     const hm = new Hammer(this.containerElm);
     hm.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL });
 
-    hm.on('panleft panright panend', (e: HammerInput) => {
+    hm.on('panleft panright panend pancancel', (e: HammerInput) => {
       // console.log(e.type);
       this._renderer.removeClass(this.containerElm, 'transition');
 
@@ -422,6 +434,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             }
           }
           break;
+        case 'pancancel':
         case 'panend':
           this.grabbing = false;
 
