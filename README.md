@@ -72,6 +72,7 @@ export class YourModule {}
 
   <section ngx-hm-carousel-container class="content">
     <article class="item cursor-pointer"
+      ngx-hm-carousel-item
       *ngFor="let avatar of avatars">
       <div class="img"
         [style.backgroundImage]="'url('+avatar.url+')'">
@@ -240,6 +241,7 @@ This Directive will Dynamin load element with previous element and next element 
 ```html
 <section ngx-hm-carousel-container class="content">
   <article class="item cursor-pointer"
+    ngx-hm-carousel-item
     *ngFor="let item of data; let i = index">
     <div *ngxHmCarouselDynamic="i; length: data.length; index: currentI"
       class="img" [style.backgroundImage]="item.url">

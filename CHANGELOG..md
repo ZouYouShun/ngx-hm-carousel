@@ -1,3 +1,11 @@
+## 1.2.8
+
+### Bug fix
+* **carousel item change**: When add item to the children, will recaculate the carousel variable.
+
+### Break Change
+* **Add ngx-hm-carousel-item directive back**: with recaculate the carousel varibae so add `ngx-hm-carousel` back.
+
 ## 1.2.7
 
 ### Bug fix
