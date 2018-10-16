@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { NgxHmCarouselDynamicDirective } from './ngx-hm-carousel-dynamic.directive';
 import { NgxHmCarouselComponent } from './ngx-hm-carousel.component';
+import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 
 
 @NgModule({
@@ -13,11 +14,13 @@ import { NgxHmCarouselComponent } from './ngx-hm-carousel.component';
   ],
   declarations: [
     NgxHmCarouselComponent,
-    NgxHmCarouselDynamicDirective
+    NgxHmCarouselDynamicDirective,
+    NgxHmCarouselItemDirective
   ],
   exports: [
     NgxHmCarouselComponent,
-    NgxHmCarouselDynamicDirective
+    NgxHmCarouselDynamicDirective,
+    NgxHmCarouselItemDirective
   ]
 })
 export class NgxHmCarouselModule { }

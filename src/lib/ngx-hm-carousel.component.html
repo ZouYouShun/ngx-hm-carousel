@@ -1,5 +1,5 @@
 <div #parentChild class="carousel">
-  <ng-content select="[ngx-hm-carousel-container]"></ng-content>
+  <ng-content select="[ngx-hm-carousel-container]" #mainContent></ng-content>
   <!-- left -->
   <div #prev *ngIf="contentPrev"
     class="direction left">
@@ -13,7 +13,7 @@
   <!-- indicators -->
   <ul class="indicators" *ngIf="dotElm">
     <li
-      *ngFor="let dot of dots; let i = index;"
+      *ngFor="let dot of itemElms; let i = index;"
       (click)="setIndex(i)">
       <ng-container
         *ngTemplateOutlet="dotElm, context: {
