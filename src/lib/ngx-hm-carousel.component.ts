@@ -219,6 +219,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           this.destroy();
           this.removeInfiniteElm();
           this.init(false);
+          this.progressWidth = 0;
         })
       ),
       resizeObservable(
