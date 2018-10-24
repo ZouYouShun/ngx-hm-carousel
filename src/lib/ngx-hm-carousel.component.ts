@@ -145,6 +145,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     if (value) {
       this._renderer.addClass(this.containerElm, 'grabbing');
     } else {
+      this.panTimes = 0;
       this.callRestart();
       this._renderer.removeClass(this.containerElm, 'grabbing');
     }
@@ -199,6 +200,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private _infinite = false;
   private _tmpInfinite = false;
   private _grabbing = false;
+
+  private panTimes = 0;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -400,6 +403,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       switch (e.type) {
         case 'panleft':
         case 'panright':
+          this.panTimes++;
+          // only when panmove more than two times, set move
+          if (this.panTimes < 2) {
+            return;
+          }
+
           this.grabbing = true;
           // When show-num is bigger than length, stop hammer
           if (this.align !== 'center' && this.showNum >= this.elms.length) {
@@ -414,8 +423,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
           this.left = -this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX;
 
-          // if not dragmany, when bigger than half
-          if (!this.isDragMany || Math.abs(e.deltaY) > 50) {
+          // // if not dragmany, when bigger than half
+          if (!this.isDragMany) {
             if (Math.abs(e.deltaX) > this.elmWidth * 0.5) {
               if (e.deltaX > 0) {
                 this.currentIndex -= this.scrollNum;
@@ -429,6 +438,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           }
           break;
         case 'pancancel':
+          this.grabbing = false;
+          this.drawView(this.currentIndex);
+          break;
+
         case 'panend':
           this.grabbing = false;
 

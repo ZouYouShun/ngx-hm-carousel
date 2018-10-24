@@ -1,3 +1,8 @@
+## 1.2.9
+
+### Bug fix
+* **Mobile touch error**: Fix when scroll event occur, the carousel will move error point, and can't touch problem.
+
 ## 1.2.8
 
 ### Bug fix
