@@ -2,6 +2,9 @@
 
 A lightweight carousel UI for Angular, support mobile touch with Hammerjs.
 
+Work with custom animation, Example:
+https://stackblitz.com/edit/ngx-hm-carousel-fade-example
+
 ## Description
 
 An Carousel that eazy to use with your custom template.
