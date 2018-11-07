@@ -49,6 +49,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @ContentChild('carouselProgress') progressElm: TemplateRef<any>;
 
   @Input('aniTime') aniTime = 400;
+  @Input('aniClass') aniClass = 'transition';
+  @Input('notDrag') notDrag = false;
   @Input('align') align: 'left' | 'center' | 'right' = 'center';
   @Input('mourse-enable') mourseEnable = false;
   @Input('between-delay') delay = 8000;
@@ -421,7 +423,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             e.deltaX *= 0.2;
           }
 
-          this.left = -this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX;
+          if (!this.notDrag) {
+            this.left = -this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX;
+          }
 
           // // if not dragmany, when bigger than half
           if (!this.isDragMany) {
@@ -504,9 +508,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     if (this.elms.length > 1) {
       this.left = -((index * this.elmWidth) - this.alignDistance);
       if (isAnimation) {
-        this._renderer.addClass(this.containerElm, 'transition');
+        this._renderer.addClass(this.containerElm, this.aniClass);
       } else {
-        this._renderer.removeClass(this.containerElm, 'transition');
+        this._renderer.removeClass(this.containerElm, this.aniClass);
       }
       // if infinite move to next index with timeout
       this.InfiniteHandler(index);
@@ -532,7 +536,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         }
         setTimeout(() => {
           // 如果是循環的，當動畫結束偷偷的跳到當前的index、left去
-          this._renderer.removeClass(this.containerElm, 'transition');
+          this._renderer.removeClass(this.containerElm, this.aniClass);
           switch (state) {
             case -1:
               const distance = (this.lastIndex * this.elmWidth) - this.alignDistance;
