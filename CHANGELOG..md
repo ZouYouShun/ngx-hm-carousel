@@ -1,3 +1,9 @@
+## 1.3.0
+
+### Feature
+* **Animation class**: add [input] with animation add class by [aniClass]
+* **Not drag with pan move**: add [input] with Not drag with pan move by [notDrag]
+
 ## 1.2.9
 
 ### Bug fix
