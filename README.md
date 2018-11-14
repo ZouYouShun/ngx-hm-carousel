@@ -1,3 +1,5 @@
+
+[![NPM version](https://badge.fury.io/js/ngx-hm-carousel.svg)](http://badge.fury.io/js/ngx-hm-carousel)
 # ngx-hm-carousel
 
 A lightweight carousel UI for Angular, support mobile touch with Hammerjs.
