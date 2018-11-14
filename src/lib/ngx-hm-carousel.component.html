@@ -26,11 +26,9 @@
     </li>
   </ul>
   <!-- progress -->
-  <div *ngIf="progressElm && autoplay">
+  <div *ngIf="progressElm && autoplay" #progress>
     <ng-container
-      *ngTemplateOutlet="progressElm, context: {
-        $implicit: progressWidth
-      }">
+      *ngTemplateOutlet="progressElm">
     </ng-container>
   </div>
 

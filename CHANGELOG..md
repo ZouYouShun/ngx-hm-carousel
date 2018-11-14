@@ -1,3 +1,28 @@
+## 1.3.1
+
+### Optimize Performance
+* **Optimize Performance**: fix problem with change Detection by onPush and ngZone
+
+### Break Change
+* **remove emit with progress width**: remove emit with progress width, it will cause performance problem, now it only using width change with progress bar, change like below.
+
+```html
+  <ng-template #carouselProgress let-progress>
+    <div class="progress"></div>
+  </ng-template>
+```
+
+```scss
+  .progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;  // set default width to zero, it will increase with duraction (%)
+    height: 5px;
+    background: #ff5252;
+  }
+```
+
 ## 1.3.0
 
 ### Feature
