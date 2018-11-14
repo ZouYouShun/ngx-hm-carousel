@@ -163,7 +163,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   get grabbing() { return this._grabbing; }
   set grabbing(value) {
     if (this.grabbing !== value) {
-      console.log(value);
+      // console.log(value);
       this._zone.run(() => {
         if (value) {
           this._renderer.addClass(this.containerElm, 'grabbing');
