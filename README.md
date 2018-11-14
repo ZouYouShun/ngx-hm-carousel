@@ -100,8 +100,7 @@ export class YourModule {}
   </ng-template>
 
   <ng-template #carouselProgress let-progress>
-    <div class="progress" *ngIf="progress > 0"
-    [style.width]="(direction==='right' ? progress : 100 - progress) + '%'"></div>
+    <div class="progress"></div>
   </ng-template>
 
 </ngx-hm-carousel>
@@ -147,12 +146,18 @@ export class DragOneComponent {
 * this project not contain any specile style, you can custom by yourself
 
 ```css
+.transition {
+  transition: all .4s ease-in-out;
+}
+
 .carousel {
   .content {
     display: flex;
+
     .item {
       width: 100%;
       display: block;
+
       .img {
         width: 100%;
         display: block;
@@ -163,9 +168,11 @@ export class DragOneComponent {
       }
     }
   }
+
   .item {
     width: 100%;
     display: block;
+
     .img {
       width: 100%;
       display: block;
@@ -175,31 +182,33 @@ export class DragOneComponent {
       padding-bottom: 50%;
     }
   }
+
   .ball {
     width: 10px;
     height: 10px;
-    border-radius: app-border-radius(cycle);
+    border-radius: 50%;
     background: black;
     border: 2px solid;
     opacity: 0.5;
+
     &.visible {
       opacity: 1;
     }
   }
-  &.transition {
-    transition: all .4s ease-in-out;
-  }
+
   .progress {
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 100%;
+    width: 0;
     height: 5px;
     background: #ff5252;
   }
+
   .click-area {
     width: 50px;
     text-align: center;
+
     i {
       font-size: 3em;
     }
