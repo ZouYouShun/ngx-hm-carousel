@@ -242,10 +242,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
     this.init();
 
+
     forkJoin(
       this.bindClick(),
       // when item changed, remove old hammer binding, and reset width
       this.itemElms.changes.pipe(
+        // detectChanges to change view dots
+        tap(() => this._cd.detectChanges()),
         tap(() => {
           this.destroy();
           this.removeInfiniteElm();
