@@ -14,6 +14,9 @@ import {
   Renderer2,
   TemplateRef,
   ViewChild,
+  NgZone,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { BehaviorSubject, forkJoin, fromEvent, interval, merge, Observable, of, Subject, Subscription } from 'rxjs';
@@ -25,22 +28,22 @@ import { resizeObservable } from './rxjs.observable.resize';
 // if the pane is paned .15, switch to the next pane.
 const PANBOUNDARY = 0.15;
 
-const VALUE_ACCESSOR: any = {
-  provide: NG_VALUE_ACCESSOR,
-  useExisting: forwardRef(() => NgxHmCarouselComponent),
-  multi: true
-};
-
 @Component({
   selector: 'ngx-hm-carousel',
   templateUrl: './ngx-hm-carousel.component.html',
   styleUrls: ['./ngx-hm-carousel.component.scss'],
-  providers: [VALUE_ACCESSOR],
+  providers: [{
+    provide: NG_VALUE_ACCESSOR,
+    useExisting: forwardRef(() => NgxHmCarouselComponent),
+    multi: true
+  }],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewInit, OnDestroy {
   @ViewChild('parentChild') parentChild;
   @ViewChild('prev') private btnPrev: ElementRef;
   @ViewChild('next') private btnNext: ElementRef;
+  @ViewChild('progress') private progressContainerElm: ElementRef;
   // get all item elms
   @ContentChildren(NgxHmCarouselItemDirective, { read: ElementRef }) itemElms: QueryList<ElementRef>;
   @ContentChild('carouselPrev') contentPrev: TemplateRef<any>;
@@ -76,7 +79,11 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   @Input('autoplay-speed')
   public get speed() { return this.speedChange.value; }
-  public set speed(value) { this.speedChange.next(value); }
+  public set speed(value) {
+    this._zone.runOutsideAngular(() => {
+      this.speedChange.next(value);
+    });
+  }
 
   @Input('show-num')
   get showNum() { return this._showNum; }
@@ -97,16 +104,24 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       if (!this.runLoop && !(0 <= value && value <= this.lastIndex)) {
         return;
       }
-      this._currentIndex = value;
+      this._zone.run(() => {
+        this._currentIndex = value;
+      });
       if (this.elms) {
         if (this.autoplay && !this.isFromAuto) {
-          this.stopEvent.next();
-          this.restart.next(null);
+
+          this._zone.runOutsideAngular(() => {
+            this.stopEvent.next();
+            this.restart.next(null);
+          });
         }
         this.drawView(this.currentIndex);
       }
       if (0 <= this.currentIndex && this.currentIndex <= this.lastIndex) {
-        this.onChange(this.currentIndex);
+        this._zone.run(() => {
+          this.onChange(this.currentIndex);
+          this._cd.detectChanges();
+        });
       }
     }
     this.isFromAuto = false;
@@ -119,7 +134,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       if (this.elms) {
         this.progressWidth = 0;
         if (value) {
-          this.doNextSub$ = this.doNext.subscribe();
+          this._zone.runOutsideAngular(() => {
+            this.doNextSub$ = this.doNext.subscribe();
+          });
         } else {
           if (this.doNextSub$) { this.doNextSub$.unsubscribe(); }
         }
@@ -139,19 +156,26 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   set progressWidth(value) {
     if (this.progressElm !== undefined && this.autoplay) {
       this._porgressWidth = value;
+      this._renderer.setStyle((<HTMLElement>this.progressContainerElm.nativeElement).children[0], 'width', `${this.progressWidth}%`);
     }
   }
 
   get grabbing() { return this._grabbing; }
   set grabbing(value) {
-    if (value) {
-      this._renderer.addClass(this.containerElm, 'grabbing');
-    } else {
-      this.panTimes = 0;
-      this.callRestart();
-      this._renderer.removeClass(this.containerElm, 'grabbing');
+    if (this.grabbing !== value) {
+      console.log(value);
+      this._zone.run(() => {
+        if (value) {
+          this._renderer.addClass(this.containerElm, 'grabbing');
+        } else {
+          this.panTimes = 0;
+          this.callRestart();
+          this._renderer.removeClass(this.containerElm, 'grabbing');
+        }
+        this._grabbing = value;
+        this._cd.detectChanges();
+      });
     }
-    this._grabbing = value;
   }
 
   private set left(value) { this._renderer.setStyle(this.containerElm, 'left', `${value}px`); }
@@ -207,7 +231,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
-    private _renderer: Renderer2
+    private _renderer: Renderer2,
+    private _zone: NgZone,
+    private _cd: ChangeDetectorRef
   ) { }
 
   ngAfterViewInit() {
@@ -325,29 +351,31 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         )
       );
     }
+    this._zone.runOutsideAngular(() => {
 
-    this.doNext = startEvent.pipe(
-      debounceTime(this.delay),
-      switchMap(() => this.speedChange),
-      switchMap(() =>
-        this.runProgress(20).pipe(
-          tap(() => {
-            this.isFromAuto = true;
-            // console.log('next');
-            if (this.direction === 'left') {
-              this.currentIndex -= this.scrollNum;
-            } else {
-              this.currentIndex += this.scrollNum;
-            }
-          }),
-          takeUntil(stopEvent.pipe(tap(() => this.progressWidth = 0))
+      this.doNext = startEvent.pipe(
+        debounceTime(this.delay),
+        switchMap(() => this.speedChange),
+        switchMap(() =>
+          this.runProgress(20).pipe(
+            tap(() => {
+              this.isFromAuto = true;
+              // console.log('next');
+              if (this.direction === 'left') {
+                this.currentIndex -= this.scrollNum;
+              } else {
+                this.currentIndex += this.scrollNum;
+              }
+            }),
+            takeUntil(stopEvent.pipe(tap(() => this.progressWidth = 0))
+            )
           )
-        )
-      ));
+        ));
 
-    if (this.autoplay) {
-      this.doNextSub$ = this.doNext.subscribe();
-    }
+      if (this.autoplay) {
+        this.doNextSub$ = this.doNext.subscribe();
+      }
+    });
   }
 
   private reSetVariable() {
@@ -393,93 +421,98 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private bindHammer() {
-    const hm = new Hammer(this.containerElm);
-    hm.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+    return this._zone.runOutsideAngular(() => {
 
-    hm.on('panleft panright panend pancancel', (e: HammerInput) => {
-      // console.log(e.type);
-      this._renderer.removeClass(this.containerElm, 'transition');
+      const hm = new Hammer(this.containerElm);
+      hm.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL });
 
-      if (this.autoplay) { this.stopEvent.next(); }
+      hm.on('panleft panright panend pancancel', (e: HammerInput) => {
+        // console.log(e.type);
+        this._renderer.removeClass(this.containerElm, 'transition');
 
-      switch (e.type) {
-        case 'panleft':
-        case 'panright':
-          this.panTimes++;
-          // only when panmove more than two times, set move
-          if (this.panTimes < 2) {
-            return;
-          }
+        if (this.autoplay) {
+          this._zone.runOutsideAngular(() => { this.stopEvent.next(); });
+        }
 
-          this.grabbing = true;
-          // When show-num is bigger than length, stop hammer
-          if (this.align !== 'center' && this.showNum >= this.elms.length) {
-            this.grabbing = false;
-            this.hammer.stop(true);
-            return;
-          }
-          // Slow down at the first and last pane.
-          if (!this.runLoop && this.outOfBound(e.type)) {
-            e.deltaX *= 0.2;
-          }
+        switch (e.type) {
+          case 'panleft':
+          case 'panright':
+            this.panTimes++;
+            // only when panmove more than two times, set move
+            if (this.panTimes < 2) {
+              return;
+            }
 
-          if (!this.notDrag) {
-            this.left = -this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX;
-          }
-
-          // // if not dragmany, when bigger than half
-          if (!this.isDragMany) {
-            if (Math.abs(e.deltaX) > this.elmWidth * 0.5) {
-              if (e.deltaX > 0) {
-                this.currentIndex -= this.scrollNum;
-              } else {
-                this.currentIndex += this.scrollNum;
-              }
+            this.grabbing = true;
+            // When show-num is bigger than length, stop hammer
+            if (this.align !== 'center' && this.showNum >= this.elms.length) {
               this.grabbing = false;
               this.hammer.stop(true);
               return;
             }
-          }
-          break;
-        case 'pancancel':
-          this.grabbing = false;
-          this.drawView(this.currentIndex);
-          break;
+            // Slow down at the first and last pane.
+            if (!this.runLoop && this.outOfBound(e.type)) {
+              e.deltaX *= 0.2;
+            }
 
-        case 'panend':
-          this.grabbing = false;
+            if (!this.notDrag) {
+              this.left = -this.currentIndex * this.elmWidth + this.alignDistance + e.deltaX;
+            }
 
-          if (Math.abs(e.deltaX) > this.elmWidth * PANBOUNDARY) {
-            const moveNum = this.isDragMany ?
-              Math.ceil(Math.abs(e.deltaX) / this.elmWidth) : this.scrollNum;
-
-            let prevIndex = this.currentIndex - moveNum;
-            let nextIndex = this.currentIndex + moveNum;
-
-            // 如果不是無限循環，不能大於或小於
-
-            if (e.deltaX > 0) {
-              if (!this.runLoop && prevIndex < 0) {
-                prevIndex = 0;
-                this.drawView(0);
+            // // if not dragmany, when bigger than half
+            if (!this.isDragMany) {
+              if (Math.abs(e.deltaX) > this.elmWidth * 0.5) {
+                if (e.deltaX > 0) {
+                  this.currentIndex -= this.scrollNum;
+                } else {
+                  this.currentIndex += this.scrollNum;
+                }
+                this.grabbing = false;
+                this.hammer.stop(true);
+                return;
               }
-
-              this.currentIndex = prevIndex;
-            } else {
-              if (!this.runLoop && nextIndex > this.maxRightIndex) {
-                nextIndex = this.maxRightIndex;
-                this.drawView(nextIndex);
-              }
-              this.currentIndex = nextIndex;
             }
             break;
-          }
-          this.drawView(this.currentIndex);
-          break;
-      }
-    });
+          case 'pancancel':
+            this.grabbing = false;
+            this.drawView(this.currentIndex);
+            break;
 
-    return hm;
+          case 'panend':
+            this.grabbing = false;
+
+            if (Math.abs(e.deltaX) > this.elmWidth * PANBOUNDARY) {
+              const moveNum = this.isDragMany ?
+                Math.ceil(Math.abs(e.deltaX) / this.elmWidth) : this.scrollNum;
+
+              let prevIndex = this.currentIndex - moveNum;
+              let nextIndex = this.currentIndex + moveNum;
+
+              // 如果不是無限循環，不能大於或小於
+
+              if (e.deltaX > 0) {
+                if (!this.runLoop && prevIndex < 0) {
+                  prevIndex = 0;
+                  this.drawView(0);
+                }
+
+                this.currentIndex = prevIndex;
+              } else {
+                if (!this.runLoop && nextIndex > this.maxRightIndex) {
+                  nextIndex = this.maxRightIndex;
+                  this.drawView(nextIndex);
+                }
+                this.currentIndex = nextIndex;
+              }
+              break;
+            }
+            this.drawView(this.currentIndex);
+            break;
+        }
+      });
+
+      return hm;
+    });
   }
 
   private bindClick() {
@@ -498,7 +531,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   private callRestart() {
     if (this.autoplay && !this.mouseOnContainer) {
-      this.restart.next(null);
+      this._zone.runOutsideAngular(() => {
+        this.restart.next(null);
+      });
     }
   }
 
@@ -561,15 +596,18 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private runProgress(betweenTime): Observable<any> {
-    const howTimes = this.speed / betweenTime;
-    const everyIncrease = 100 / this.speed * betweenTime;
-    // console.log('progress');
-    return interval(betweenTime).pipe(
-      tap(t => {
-        this.progressWidth = (t % howTimes) * everyIncrease;
-      }),
-      bufferCount(Math.round(this.speed / betweenTime), 0)
-    );
+
+    return this._zone.runOutsideAngular(() => {
+      const howTimes = this.speed / betweenTime;
+      const everyIncrease = 100 / this.speed * betweenTime;
+      // console.log('progress');
+      return interval(betweenTime).pipe(
+        tap(t => {
+          this.progressWidth = (t % howTimes) * everyIncrease;
+        }),
+        bufferCount(Math.round(this.speed / betweenTime), 0)
+      );
+    });
   }
 
   private getAutoNum() {
@@ -592,3 +630,4 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
 }
+
