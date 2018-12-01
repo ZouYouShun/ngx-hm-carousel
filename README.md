@@ -18,8 +18,8 @@ Depend on [Hammerjs](https://hammerjs.github.io/) and [resize-observer-polyfill]
 Support Angular 6+ and Rxjs6+
 
 ## Example
-[https://alanzouhome.firebaseapp.com/package/NgxHmCarousel](https://alanzouhome.firebaseapp.com/package/NgxHmCarousel)
-
+https://alanzouhome.firebaseapp.com/package/NgxHmCarousel
+https://stackblitz.com/edit/ngx-hm-carousel-disable-drag
 ![](https://res.cloudinary.com/dw7ecdxlp/image/upload/v1533206320/1533206262496_soounq.gif)
 
 ![](https://i.imgur.com/SyyBSR9.gif)
@@ -233,12 +233,16 @@ export class DragOneComponent {
 | `mourse-enable`          | no       | false                 | boolean         | ngx-hm-carousel | is mourse moveover stop the auto play |
 | `show-num`               | no       | 1                     | number  or 'auto' | ngx-hm-carousel | how many number items to show once |
 | `scroll-num`             | no       | 1                     | number          | ngx-hm-carousel | how many number with each scroll |
-| `drag-many`              | no       | false                 | boolean         | ngx-hm-carousel | is can once scroll many item, 
-simulate with scrollbar |
-| `align`               | no       | 'left'                 | 'left'|'right'|'center' | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
+| `drag-many`              | no       | false                 | boolean         | ngx-hm-carousel | is can scroll many item once,  simulate with scrollbar |
+| `align`               | no       | 'left'                 | 'left' or 'right'|'center' | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
 | `infinite`               | no       | false                 | boolean         | ngx-hm-carousel | is the carousel will move loop |
 | `aniTime`               | no       | 400                 | number         | ngx-hm-carousel | when `infinite` is true, the animation time with item |
+| `aniClass`               | no       | 'transition'                 | string         | ngx-hm-carousel | this class will add when carousel auto play or touch drop |
+| `disable-drag`               | no       | false                 | boolean         | ngx-hm-carousel | disable drag event with touch and mouse pan moving|
+| `not-follow-pan`               | no       | false                | boolean         | ngx-hm-carousel | disable when drag occur the child element will follow touch point. |
 | `[(ngModel)]`               | no       | 0                 | number         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |
+
+
 
 ### Other Directive
 
