@@ -14,7 +14,7 @@
   <ul class="indicators" *ngIf="dotElm">
     <li
       *ngFor="let dot of itemElms; let i = index;"
-      (click)="setIndex(i)">
+      (click)="currentIndex = i">
       <ng-container
         *ngTemplateOutlet="dotElm, context: {
           $implicit: {

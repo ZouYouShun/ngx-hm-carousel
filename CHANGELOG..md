@@ -1,3 +1,12 @@
+## 1.3.2
+
+### Feature
+* **Add Disable Drag**: add input to switch drag event listener with [disable-drag].
+* **When elements length zero can't drag**: Now when children elements length is equal zero, stop drag event.
+
+### Break Change
+* **Not drag with pan move**: change name with [notDrag] to [not-follow-pan].
+
 ## 1.3.1
 
 ### Optimize Performance
@@ -171,3 +180,4 @@
 ### First Release
 
 * **An carousel for Angular support mobiel with Hammerjs**
+
