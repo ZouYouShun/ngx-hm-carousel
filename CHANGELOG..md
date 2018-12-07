@@ -1,3 +1,8 @@
+## 1.4.0
+
+### Feature
+* **Add support with Angular Universal**: when universal run, it will init with carousel view.
+
 ## 1.3.2
 
 ### Feature
