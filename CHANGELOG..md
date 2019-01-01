@@ -1,3 +1,9 @@
+## 1.4.1
+
+### But Fix
+* **Fix Animation error**: fix doesn't remove aniClass when remove animation.
+* **Fix init with index error**: fix when init with index, the animation will occur problem.
+
 ## 1.4.0
 
 ### Feature

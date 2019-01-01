@@ -129,7 +129,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             this.restart.next(null);
           });
         }
-        this.drawView(this.currentIndex);
+        this.drawView(this.currentIndex, this.setValueCount !== 0);
       }
       if (0 <= this.currentIndex && this.currentIndex <= this.itemElms.length - 1) {
         this._zone.run(() => {
@@ -254,6 +254,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private panCount = 0;
 
   private _disableDrag = false;
+  private setValueCount = 0;
 
   private get rootElmWidth() {
     return (isPlatformBrowser(this.platformId) ? this.rootElm.clientWidth : 100);
@@ -283,7 +284,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           }
           this.destroy();
           this.removeInfiniteElm();
-          this.init(false);
+          this.init();
           this.progressWidth = 0;
         }),
         tap(() => this._cd.detectChanges()),
@@ -296,14 +297,14 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     ).subscribe();
   }
 
-  private init(isAnimation = true) {
+  private init() {
     this.initVariable();
     this.setViewWidth(true);
     this.reSetVariable();
     if (!this.disableDrag) {
       this.hammer = this.bindHammer();
     }
-    this.drawView(this.currentIndex, isAnimation);
+    this.drawView(this.currentIndex, false);
     if (isPlatformBrowser(this.platformId)) {
       this.addInfiniteElm();
     }
@@ -327,7 +328,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
   }
 
-  writeValue(value: any) { if (value || value === 0) { this.currentIndex = value; } }
+  writeValue(value: any) {
+    if (value || value === 0) {
+      this.currentIndex = value;
+      this.setValueCount++;
+    }
+  }
   registerOnChange(fn: (value: any) => any) { this.onChange = fn; }
   registerOnTouched(fn: () => any) { this.onTouched = fn; }
   private onChange = (_: any) => { };
@@ -478,7 +484,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           return;
         }
 
-        this._renderer.removeClass(this.containerElm, 'transition');
+        this._renderer.removeClass(this.containerElm, this.aniClass);
 
         if (this.autoplay) {
           this._zone.runOutsideAngular(() => { this.stopEvent.next(); });
