@@ -6,6 +6,9 @@ A lightweight carousel UI for Angular, support mobile touch with Hammerjs.
 
 Work with custom animation, Example:
 https://stackblitz.com/edit/ngx-hm-carousel-fade-example
+https://stackblitz.com/edit/ngx-hm-carousel-custom-breakpoint
+https://stackblitz.com/edit/ngx-hm-carousel-change-show-number-dynamicly
+https://stackblitz.com/edit/ngx-hm-carousel-disable-drag
 
 ## Description
 
@@ -231,6 +234,8 @@ export class DragOneComponent {
 | `between-delay`          | no       | 8000 (ms)             | number          | ngx-hm-carousel | each auto play between time |
 | `autoplay-direction`     | no       | 'right'               |'left' or 'right'| ngx-hm-carousel | auto play direction       |
 | `mourse-enable`          | no       | false                 | boolean         | ngx-hm-carousel | is mourse moveover stop the auto play |
+| `autoplay`               | no       | false                 | boolean         | ngx-hm-carousel | carousel auto play confing |
+| `[breakpoint]`           | no       | []                 | `NgxHmCarouselBreakPointUp`         | ngx-hm-carousel | switch show number with own logic like boostrap scss media-breakpoint-up |
 | `show-num`               | no       | 1                     | number  or 'auto' | ngx-hm-carousel | how many number items to show once |
 | `scroll-num`             | no       | 1                     | number          | ngx-hm-carousel | how many number with each scroll |
 | `drag-many`              | no       | false                 | boolean         | ngx-hm-carousel | is can scroll many item once,  simulate with scrollbar |
@@ -243,6 +248,13 @@ export class DragOneComponent {
 | `[(ngModel)]`               | no       | 0                 | number         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |
 
 
+```ts
+// the breakpoint interface
+export interface NgxHmCarouselBreakPointUp {
+  width: number;
+  number: number;
+}
+```
 
 ### Other Directive
 
