@@ -1,3 +1,15 @@
+## 1.5.0
+
+### Feature
+* **infinite with multi show number**: We can use the input `[show-num]` and set `[infinite]="true"`, it will clone the element to view, and can change the input dynamicly to switch show number. [Example](https://stackblitz.com/edit/ngx-hm-carousel-change-show-number-dynamicly)
+* **Break point with width**: We can set own break point to switch show number with own logic. [Example](https://stackblitz.com/edit/ngx-hm-carousel-custom-breakpoint)
+**Important: the breakpoint is follow the `container width`, not follow with window width.**
+
+### But Fix
+* **Mouse over restart problem**: Fix when enable `mourse-enable`, when mourse on the carousel and drap the view, change index, the restart will run problem.
+
+* **Drag many animation disappear problem**: Fil problem with drag many, the animation doesn't append problem.
+
 ## 1.4.1
 
 ### But Fix
