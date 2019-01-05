@@ -19,8 +19,8 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { BehaviorSubject, forkJoin, fromEvent, interval, merge, Observable, of, Subject, Subscription } from 'rxjs';
-import { bufferCount, debounceTime, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, fromEvent, interval, merge, Observable, of, Subject, Subscription, timer } from 'rxjs';
+import { bufferCount, switchMap, takeUntil, tap, filter } from 'rxjs/operators';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { resizeObservable } from './rxjs.observable.resize';
@@ -418,6 +418,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         startEvent = merge(
           startEvent,
           fromEvent(this.containerElm, 'mouseleave').pipe(
+            // when leave, we should reverse grabbing state to set the mouseOn state,
+            // because when the grabbing, the mask will on, and it will occur leave again
+            filter(() => !this.grabbing),
             tap(() => this.mouseOnContainer = false)
           )
         );
@@ -430,10 +433,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       }
 
       this.doNext = startEvent.pipe(
-        debounceTime(this.delay),
+        // not using debounceTime, it will stop mourseover event detect, will cause mourse-enable error
+        // debounceTime(this.delay),
         switchMap(() => this.speedChange),
         switchMap(() =>
-          this.runProgress(20).pipe(
+          timer(this.delay).pipe(
+            switchMap(() => this.runProgress(20)),
             tap(() => {
               this.isFromAuto = true;
               // console.log('next');
@@ -443,8 +448,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
                 this.currentIndex += this.scrollNum;
               }
             }),
-            takeUntil(stopEvent.pipe(tap(() => this.progressWidth = 0))
-            )
+            takeUntil(stopEvent.pipe(
+              tap(() => this.progressWidth = 0)
+            ))
           )
         ));
 
@@ -616,9 +622,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private callRestart() {
-    if (this.autoplay && !this.mouseOnContainer) {
+    // if that is autoplay
+    // if that mouse is not on container( only mouse-enable is true, the state maybe true)
+    // if now is grabbing, skip this restart, using grabbing change restart
+    if (this.autoplay && !this.mouseOnContainer && !this.grabbing) {
       this._zone.runOutsideAngular(() => {
         this.restart.next(null);
+        console.log('restart');
       });
     }
   }
@@ -686,12 +696,11 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     return this._zone.runOutsideAngular(() => {
       const howTimes = this.speed / betweenTime;
       const everyIncrease = 100 / this.speed * betweenTime;
-      // console.log('progress');
       return interval(betweenTime).pipe(
         tap(t => {
           this.progressWidth = (t % howTimes) * everyIncrease;
         }),
-        bufferCount(Math.round(this.speed / betweenTime), 0)
+        bufferCount(Math.round(howTimes), 0)
       );
     });
   }
