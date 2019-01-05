@@ -628,7 +628,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     if (this.autoplay && !this.mouseOnContainer && !this.grabbing) {
       this._zone.runOutsideAngular(() => {
         this.restart.next(null);
-        console.log('restart');
       });
     }
   }
