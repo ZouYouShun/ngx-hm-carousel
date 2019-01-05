@@ -4,11 +4,7 @@
 
 A lightweight carousel UI for Angular, support mobile touch with Hammerjs.
 
-Work with custom animation, Example:
-https://stackblitz.com/edit/ngx-hm-carousel-fade-example
-https://stackblitz.com/edit/ngx-hm-carousel-custom-breakpoint
-https://stackblitz.com/edit/ngx-hm-carousel-change-show-number-dynamicly
-https://stackblitz.com/edit/ngx-hm-carousel-disable-drag
+Work with custom animation, and server-side-rendering.
 
 ## Description
 
@@ -22,10 +18,19 @@ Support Angular 6+ and Rxjs6+
 
 ## Example
 https://alanzouhome.firebaseapp.com/package/NgxHmCarousel
-https://stackblitz.com/edit/ngx-hm-carousel-disable-drag
+
 ![](https://res.cloudinary.com/dw7ecdxlp/image/upload/v1533206320/1533206262496_soounq.gif)
 
 ![](https://i.imgur.com/SyyBSR9.gif)
+
+## Stackblitz Example
+[with custom animation](https://stackblitz.com/edit/ngx-hm-carousel-fade-example)
+
+[custom-breakpoint](https://stackblitz.com/edit/ngx-hm-carousel-custom-breakpoint)
+
+[change-show-number-dynamicly](https://stackblitz.com/edit/ngx-hm-carousel-change-show-number-dynamicly)
+
+[disable-drag event](https://stackblitz.com/edit/ngx-hm-carousel-disable-drag)
 
 
 ## Install
