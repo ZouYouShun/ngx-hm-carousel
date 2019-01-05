@@ -32,6 +32,8 @@ https://alanzouhome.firebaseapp.com/package/NgxHmCarousel
 
 [disable-drag event](https://stackblitz.com/edit/ngx-hm-carousel-disable-drag)
 
+[loop carousel](https://stackblitz.com/edit/ngx-hm-carousel-seprate-transition-class)
+
 
 ## Install
 
@@ -247,7 +249,8 @@ export class DragOneComponent {
 | `align`               | no       | 'left'                 | 'left' or 'right'|'center' | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
 | `infinite`               | no       | false                 | boolean         | ngx-hm-carousel | is the carousel will move loop |
 | `aniTime`               | no       | 400                 | number         | ngx-hm-carousel | when `infinite` is true, the animation time with item |
-| `aniClass`               | no       | 'transition'                 | string         | ngx-hm-carousel | this class will add when carousel auto play or touch drop |
+| `aniClass`               | no       | 'transition'                 | string         | ngx-hm-carousel | this class will add when carousel touch drap or click change index |
+| `aniClassAuto`               | no       | using `aniClass`      | string         | ngx-hm-carousel | this class will add when carousel auto play |
 | `disable-drag`               | no       | false                 | boolean         | ngx-hm-carousel | disable drag event with touch and mouse pan moving|
 | `not-follow-pan`               | no       | false                | boolean         | ngx-hm-carousel | disable when drag occur the child element will follow touch point. |
 | `[(ngModel)]`               | no       | 0                 | number         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |

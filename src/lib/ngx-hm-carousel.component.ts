@@ -20,7 +20,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { BehaviorSubject, forkJoin, fromEvent, interval, merge, Observable, of, Subject, Subscription, timer } from 'rxjs';
-import { bufferCount, switchMap, takeUntil, tap, filter } from 'rxjs/operators';
+import { bufferCount, switchMap, takeUntil, tap, filter, take } from 'rxjs/operators';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { resizeObservable } from './rxjs.observable.resize';
@@ -52,10 +52,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @ContentChild('carouselDot') dotElm: TemplateRef<any>;
   @ContentChild('carouselProgress') progressElm: TemplateRef<any>;
 
-  @Input('aniTime') aniTime = 400;
-  @Input('aniClass') aniClass = 'transition';
+  @Input() aniTime = 400;
+  @Input() aniClass = 'transition';
+  @Input() aniClassAuto = this.aniClass;
+
+  // this default autoplay animation is same as aniClass
+  @Input() align: 'left' | 'center' | 'right' = 'center';
   @Input('not-follow-pan') notDrag = false;
-  @Input('align') align: 'left' | 'center' | 'right' = 'center';
   @Input('mourse-enable') mourseEnable = false;
   @Input('between-delay') delay = 8000;
   @Input('autoplay-direction') direction: 'left' | 'right' = 'right';
@@ -519,7 +522,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           return;
         }
 
-        this._renderer.removeClass(this.containerElm, this.aniClass);
+        this.removeContainerTransition();
 
         if (this.autoplay) {
           this._zone.runOutsideAngular(() => { this.stopEvent.next(); });
@@ -632,22 +635,31 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
   }
 
-  private drawView(index: number, isAnimation = true) {
+  private drawView(index: number, isAnimation = true, isFromAuto = this.isFromAuto) {
 
     // move element only on length is more than 1
     if (this.elms.length > 1) {
+      this.removeContainerTransition();
       this.left = -((index * this.elmWidth) - this.alignDistance);
+
       if (isAnimation) {
-        this._renderer.addClass(this.containerElm, this.aniClass);
+        if (isFromAuto) {
+          this._renderer.addClass(this.containerElm, this.aniClassAuto);
+        } else {
+          this._renderer.addClass(this.containerElm, this.aniClass);
+        }
         // if infinite move to next index with timeout
         this.infiniteHandler(index);
-      } else {
-        this._renderer.removeClass(this.containerElm, this.aniClass);
       }
+
     } else {
       this.left = this.alignDistance;
     }
+  }
 
+  private removeContainerTransition() {
+    this._renderer.removeClass(this.containerElm, this.aniClass);
+    this._renderer.removeClass(this.containerElm, this.aniClassAuto);
   }
 
   private infiniteHandler(index: number) {
@@ -664,9 +676,11 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             this._currentIndex = 0;
             break;
         }
+
+        const isFromAuto = this.isFromAuto;
         setTimeout(() => {
-          // 如果是循環的，當動畫結束偷偷的跳到當前的index、left去
-          this._renderer.removeClass(this.containerElm, this.aniClass);
+          // when loop, cancel transition, and jump to boundary, when animation end
+          this.removeContainerTransition();
           switch (state) {
             case -1:
               const distance = ((this.itemElms.length - 1) * this.elmWidth) - this.alignDistance;
@@ -676,6 +690,14 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
               this.left = 0 + this.alignDistance;
               break;
           }
+
+          // if it is any loop carousel, the next event need wait the timeout complete
+          if (this.aniTime === this.speed) {
+            setTimeout(() => {
+              this.drawView(this.currentIndex, this.hasInitWriteValue, isFromAuto);
+            }, 50);
+          }
+
         }, this.aniTime);
       }
     }
