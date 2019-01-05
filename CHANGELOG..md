@@ -1,4 +1,4 @@
-## 1.5.1
+## 1.5.2
 
 ### But Fix
 * **Mouse over restart problem**: Fix error with `[mourse-enable]=true` problem with restart.
