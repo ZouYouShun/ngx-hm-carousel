@@ -32,6 +32,8 @@ https://alanzouhome.firebaseapp.com/package/NgxHmCarousel
 
 [disable-drag event](https://stackblitz.com/edit/ngx-hm-carousel-disable-drag)
 
+[loop carousel](https://stackblitz.com/edit/ngx-hm-carousel-seprate-transition-class)
+
 
 ## Install
 
