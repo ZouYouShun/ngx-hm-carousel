@@ -54,7 +54,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   @Input() aniTime = 400;
   @Input() aniClass = 'transition';
-  @Input() aniAutoplay = this.aniClass;
+  @Input() aniClassAuto = this.aniClass;
 
   // this default autoplay animation is same as aniClass
   @Input() align: 'left' | 'center' | 'right' = 'center';
@@ -644,7 +644,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
       if (isAnimation) {
         if (isFromAuto) {
-          this._renderer.addClass(this.containerElm, this.aniAutoplay);
+          this._renderer.addClass(this.containerElm, this.aniClassAuto);
         } else {
           this._renderer.addClass(this.containerElm, this.aniClass);
         }
@@ -659,7 +659,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   private removeContainerTransition() {
     this._renderer.removeClass(this.containerElm, this.aniClass);
-    this._renderer.removeClass(this.containerElm, this.aniAutoplay);
+    this._renderer.removeClass(this.containerElm, this.aniClassAuto);
   }
 
   private infiniteHandler(index: number) {

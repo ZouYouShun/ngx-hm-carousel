@@ -1,3 +1,9 @@
+## 1.6.0
+
+### Feature
+* **Seprate moving animation with user occur and autoplay**: We seprate the animation class with `[aniClass]` and `[aniClassAuto]`, now we can use different class for that.   
+[Example](https://ngx-hm-carousel-seprate-transition-class.stackblitz.io)
+
 ## 1.5.2
 
 ### But Fix
