@@ -277,7 +277,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private hasInitWriteValue = false;
 
   private get rootElmWidth() {
-    return (isPlatformBrowser(this.platformId) ? this.rootElm.clientWidth : 100);
+    return (isPlatformBrowser(this.platformId) ? this.rootElm.getBoundingClientRect().width : 100);
   }
 
   private set containerElmWidth(value) {
