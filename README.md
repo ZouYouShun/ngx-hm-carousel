@@ -76,24 +76,40 @@ export class YourModule {}
 
 
 ```html
+
 <ngx-hm-carousel
-  [(ngModel)]="index"
-  (ngModelChange)="indexChanged($event)"
-  [autoplay-speed]="3000"
-  [autoplay]="true"
+  [(ngModel)]="currentIndex"
+  [show-num]="4"
+  [autoplay-speed]="speed"
   [infinite]="infinite"
-  [between-delay]="2000"
+  [drag-many]="true"
+  [aniTime]="200"
+  [data]="avatars"
   class="carousel c-accent">
 
   <section ngx-hm-carousel-container class="content">
     <article class="item cursor-pointer"
       ngx-hm-carousel-item
-      *ngFor="let avatar of avatars">
-      <div class="img"
+      *ngFor="let avatar of avatars; let i = index"
+        [ngClass]="{'visible': currentIndex===i}">
+      <div class="img" (click)="click(i)"
         [style.backgroundImage]="'url('+avatar.url+')'">
+        {{i}}
       </div>
     </article>
+    <ng-template #infiniteContainer></ng-template>
   </section>
+
+  <!-- only using in infinite mode or autoplay mode, that will render with-->
+  <ng-template #carouselContent let-avatar let-i="index">
+    <article class="item cursor-pointer"
+      [ngClass]="{'visible': currentIndex===i}">
+      <div class="img" (click)="click(i)"
+        [style.backgroundImage]="'url('+avatar.url+')'">
+        {{i}}
+      </div>
+    </article>
+  </ng-template>
 
   <ng-template #carouselPrev>
     <div class="click-area">
@@ -116,6 +132,7 @@ export class YourModule {}
   </ng-template>
 
 </ngx-hm-carousel>
+
 ```
 
 2. TS
@@ -130,12 +147,13 @@ import { Component } from '@angular/core';
 })
 export class DragOneComponent {
 
-  index = 0;
+  currentIndex = 0;
+  speed = 5000;
   infinite = true;
   direction = 'right';
   directionToggle = true;
   autoplay = true;
-  avatars = '1234567890'.split('').map((x, i) => {
+  avatars = '1234567891234'.split('').map((x, i) => {
     const num = i;
     // const num = Math.floor(Math.random() * 1000);
     return {
@@ -146,8 +164,8 @@ export class DragOneComponent {
 
   constructor() { }
 
-  indexChanged(index) {
-    console.log(index);
+  click(i) {
+    alert(`${i}`);
   }
 
 }
@@ -157,42 +175,36 @@ export class DragOneComponent {
 
 * this project not contain any specile style, you can custom by yourself
 
-```css
-.transition {
-  transition: all .4s ease-in-out;
-}
+```scss
+$transition_time:.2s;
 
 .carousel {
+  color:white;
   .content {
     display: flex;
 
     .item {
       width: 100%;
+      padding: .5em;
       display: block;
+      opacity: 0.5;
+
+      transition: opacity 0.295s linear $transition_time;
+
+      &.visible {
+        opacity: 1;
+      }
 
       .img {
         width: 100%;
+        height: 400px;
         display: block;
         background-size: cover;
         background-position: center;
-        height: 0;
-        padding-bottom: 50%;
       }
     }
-  }
 
-  .item {
-    width: 100%;
-    display: block;
 
-    .img {
-      width: 100%;
-      display: block;
-      background-size: cover;
-      background-position: center;
-      height: 0;
-      padding-bottom: 50%;
-    }
   }
 
   .ball {
@@ -208,15 +220,6 @@ export class DragOneComponent {
     }
   }
 
-  .progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 5px;
-    background: #ff5252;
-  }
-
   .click-area {
     width: 50px;
     text-align: center;
@@ -226,6 +229,7 @@ export class DragOneComponent {
     }
   }
 }
+
 ```
 [View more examples](https://alanzouhome.firebaseapp.com/package/NgxHmCarousel)
 
@@ -248,6 +252,7 @@ export class DragOneComponent {
 | `drag-many`              | no       | false                 | boolean         | ngx-hm-carousel | is can scroll many item once,  simulate with scrollbar |
 | `align`               | no       | 'left'                 | 'left' or 'right'|'center' | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
 | `infinite`               | no       | false                 | boolean         | ngx-hm-carousel | is the carousel will move loop |
+| `data`               | no       | undefined                 | any[]         | ngx-hm-carousel | the data you using with `*ngFor`, it need when infinite mode or autoplay mode |
 | `aniTime`               | no       | 400                 | number         | ngx-hm-carousel | when `infinite` is true, the animation time with item |
 | `aniClass`               | no       | 'transition'                 | string         | ngx-hm-carousel | this class will add when carousel touch drap or click change index |
 | `aniClassAuto`               | no       | using `aniClass`      | string         | ngx-hm-carousel | this class will add when carousel auto play |
