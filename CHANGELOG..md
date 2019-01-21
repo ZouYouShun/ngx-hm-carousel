@@ -1,3 +1,8 @@
+## 1.6.2
+
+### But Fix
+* **fix infinite loop problem with rxjs**:fix infinite loop problem with rxjs.
+
 ## 1.6.1
 
 ### Optimize Performance
