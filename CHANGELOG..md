@@ -1,3 +1,13 @@
+## 1.6.1
+
+### Optimize Performance
+* **Change animation way with `transform`**: using `transform: translateX()` to change left position.
+
+### But Fix
+* **Fix rounding error when calculating element width**: using `getBoundingClientRect()` to get init view width to avoid carousel display improperly, thanks for [anteq](https://github.com/anteq) in requests [17](https://github.com/ZouYouShun/ngx-hm-carousel/pull/17)
+
+* **Prevent Drag click event trigger**: when hammer stop the click event will occur, fix that with document `touchend` and `mouseup`
+
 ## 1.6.0
 
 ### Feature

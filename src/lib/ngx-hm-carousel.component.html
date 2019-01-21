@@ -32,5 +32,7 @@
     </ng-container>
   </div>
 
-  <div class="mask" *ngIf="grabbing"></div>
+  <div class="mask" *ngIf="grabbing">
+    <ng-container *ngIf="leaveObs$ | async"></ng-container>
+  </div>
 </div>
