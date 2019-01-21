@@ -17,10 +17,12 @@ import {
   Renderer2,
   TemplateRef,
   ViewChild,
+  ViewContainerRef,
+  EmbeddedViewRef,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { BehaviorSubject, forkJoin, fromEvent, interval, merge, Observable, of, Subject, Subscription, timer } from 'rxjs';
-import { bufferCount, switchMap, takeUntil, tap, filter, take } from 'rxjs/operators';
+import { bufferCount, switchMap, takeUntil, tap, filter } from 'rxjs/operators';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { resizeObservable } from './rxjs.observable.resize';
@@ -42,7 +44,7 @@ const PANBOUNDARY = 0.15;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewInit, OnDestroy {
-  @ViewChild('parentChild') parentChild: ElementRef;
+  @ViewChild('containerElm') container: ElementRef;
   @ViewChild('prev') btnPrev: ElementRef;
   @ViewChild('next') btnNext: ElementRef;
   @ViewChild('progress') progressContainerElm: ElementRef;
@@ -53,6 +55,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @ContentChild('carouselDot') dotElm: TemplateRef<any>;
   @ContentChild('carouselProgress') progressElm: TemplateRef<any>;
 
+  @ContentChild('infiniteContainer', { read: ViewContainerRef }) infiniteContainer: ViewContainerRef;
+  @ContentChild('carouselContent') contentContent: TemplateRef<any>;
+
+  @Input() data: any[];
   @Input() aniTime = 400;
   @Input() aniClass = 'transition';
   @Input() aniClassAuto = this.aniClass;
@@ -89,20 +95,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   get infinite() { return this._infinite; }
   set infinite(value) {
     this._infinite = value;
-    if (this.LatestElm_clone.length) {
-      this.LatestElm_clone.forEach(l => {
-        this.addStyle(l, {
-          visibility: this.runLoop ? 'visible' : 'hidden'
-        });
+
+    this.infiniteElmRefs.forEach((ref) => {
+      this.addStyle(ref.rootNodes[0], {
+        visibility: this.runLoop ? 'visible' : 'hidden'
       });
-    }
-    if (this.firstElm_clone.length) {
-      this.firstElm_clone.forEach(f => {
-        this.addStyle(f, {
-          visibility: this.runLoop ? 'visible' : 'hidden'
-        });
-      });
-    }
+    });
   }
 
   @Input('autoplay-speed')
@@ -122,7 +120,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       this._showNum = +value;
       if (this.rootElm) {
         this.setViewWidth();
-        this.reSetVariable();
+        this.reSetAlignDistance();
       }
     }
   }
@@ -249,7 +247,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         addIndex = <number>this.showNum - 1;
         break;
     }
-    return ((this.itemElms.length - 1) - <number>this.showNum + 1) + addIndex;
+    return ((this.itemElms.length - 1) - this._showNum + 1) + addIndex;
   }
 
   private get runLoop() { return this.autoplay || this.infinite; }
@@ -273,8 +271,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private containerElm: HTMLElement;
 
   private elms: Array<HTMLElement>;
-  private firstElm_clone: HTMLElement[] = [];
-  private LatestElm_clone: HTMLElement[] = [];
+  private infiniteElmRefs: Array<EmbeddedViewRef<any>> = [];
+
   private hammer: HammerManager;
 
   private restart = new BehaviorSubject<any>(null);
@@ -309,7 +307,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   ) { }
 
   ngAfterViewInit() {
-    this.rootElm = this.parentChild.nativeElement;
+    this.rootElm = this.container.nativeElement;
     this.containerElm = this.rootElm.children[0] as HTMLElement;
 
     this.init();
@@ -339,6 +337,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     ).pipe(
       takeUntil(this.destroy$),
     ).subscribe();
+
   }
 
   ngOnDestroy() {
@@ -360,12 +359,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private init() {
     this.initVariable();
     this.setViewWidth(true);
-    this.reSetVariable();
+    this.reSetAlignDistance();
     if (!this.disableDrag) {
       this.hammer = this.bindHammer();
     }
     this.drawView(this.currentIndex, false);
-    if (isPlatformBrowser(this.platformId)) {
+    if (isPlatformBrowser(this.platformId) && this.runLoop) {
       this.addInfiniteElm();
     }
   }
@@ -384,47 +383,51 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   private addInfiniteElm() {
     for (let i = 1; i <= this.showNum; i++) {
-
-      const first = this.elms[(this.itemElms.length - i)].cloneNode(true) as HTMLElement;
-      this.addStyle(first, {
+      const elm = this.infiniteContainer.createEmbeddedView(this.contentContent, {
+        $implicit: this.data[this.itemElms.length - i],
+        index: this.itemElms.length - i
+      });
+      this.addStyle(elm.rootNodes[0], {
         position: 'absolute',
         transform: `translateX(-${100 * i}%)`,
         visibility: this.runLoop ? 'visible' : 'hidden'
       });
+      this.setStyle(elm.rootNodes[0], 'width', this.elmWidth);
 
-      this.firstElm_clone.push(first);
-
-
-      const last = this.elms[i - 1].cloneNode(true) as HTMLElement;
-      this.addStyle(last, {
+      const elm2 = this.infiniteContainer.createEmbeddedView(this.contentContent, {
+        $implicit: this.data[i - 1],
+        index: i - 1
+      });
+      this.addStyle(elm2.rootNodes[0], {
         position: 'absolute',
         right: 0,
         top: 0,
         transform: `translateX(${100 * i}%)`,
         visibility: this.runLoop ? 'visible' : 'hidden'
       });
+      this.setStyle(elm2.rootNodes[0], 'width', this.elmWidth);
 
-      this.LatestElm_clone.push(last);
+      elm.detectChanges();
+      elm2.detectChanges();
 
-      this._renderer.insertBefore(this.containerElm, first, this.containerElm.children[0]);
-      this._renderer.appendChild(this.containerElm, last);
+      this.infiniteElmRefs.push(elm);
+      this.infiniteElmRefs.push(elm2);
     }
-
 
   }
 
   private removeInfiniteElm() {
-    for (let i = this.firstElm_clone.length - 1; i >= 0; i--) {
-      this._renderer.removeChild(this.containerElm, this.firstElm_clone[i]);
-      this._renderer.removeChild(this.containerElm, this.LatestElm_clone[i]);
-    }
-    this.firstElm_clone = [];
-    this.LatestElm_clone = [];
+    this.infiniteElmRefs.forEach(a => {
+      a.detach();
+      a.destroy();
+    });
+    this.infiniteContainer.clear();
+    this.infiniteElmRefs = [];
   }
 
   private containerResize() {
-    this.reSetVariable();
     this.setViewWidth();
+    this.reSetAlignDistance();
 
     // 因為不能滑了，所以要回到第一個，以確保全部都有顯示
     if (this.align !== 'center' && this.showNum >= this.elms.length) {
@@ -486,7 +489,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     });
   }
 
-  private reSetVariable() {
+  private reSetAlignDistance() {
     switch (this.align) {
       case 'center':
         this.alignDistance = (this.rootElmWidth - this.elmWidth) / 2;
@@ -509,7 +512,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       // remain one elm height
       this._renderer.addClass(this.containerElm, 'ngx-hm-carousel-display-npwrap');
     }
-    this.elmWidth = this.rootElmWidth / <number>this.showNum;
+    this.elmWidth = this.rootElmWidth / this._showNum;
 
     this._renderer.removeClass(this.containerElm, 'ngx-hm-carousel-display-npwrap');
 
@@ -517,16 +520,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
     this._renderer.setStyle(this.containerElm, 'position', 'relative');
 
+    this.infiniteElmRefs.forEach((ref) => {
+      this.setStyle(ref.rootNodes[0], 'width', this.elmWidth);
+    });
     this.elms.forEach((elm: HTMLElement) => {
       this.setStyle(elm, 'width', this.elmWidth);
     });
 
-    if (this.firstElm_clone.length) {
-      for (let i = this.firstElm_clone.length - 1; i >= 0; i--) {
-        this.setStyle(this.firstElm_clone[i], 'width', this.elmWidth);
-        this.setStyle(this.LatestElm_clone[i], 'width', this.elmWidth);
-      }
-    }
   }
 
   private bindHammer() {
@@ -746,7 +746,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private getAutoNum() {
-    const curr_width = this.rootElmWidth;
     // check user has had set breakpoint
     if (this.breakpoint.length > 0) {
       // get the last bigget point
@@ -763,6 +762,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     // system init show number
     const initNum = 3;
     // 610
+    const curr_width = this.rootElmWidth;
     if (curr_width > 300) {
       return Math.floor(initNum + (curr_width / 200));
     }

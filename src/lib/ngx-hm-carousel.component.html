@@ -1,4 +1,5 @@
-<div #parentChild class="carousel">
+<div #containerElm class="carousel">
+  <!-- main content -->
   <ng-content select="[ngx-hm-carousel-container]"></ng-content>
   <!-- left -->
   <div #prev *ngIf="contentPrev"
