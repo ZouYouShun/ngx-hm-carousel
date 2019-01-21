@@ -210,7 +210,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private set left(value: number) {
-    this.setStyle(this.containerElm, 'left', value);
+    this._renderer.setStyle(this.containerElm, 'transform', `translateX(${value}px)`);
   }
 
   private get maxRightIndex() {
