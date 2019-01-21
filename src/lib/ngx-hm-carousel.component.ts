@@ -601,8 +601,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
               let prevIndex = this.currentIndex - moveNum;
               let nextIndex = this.currentIndex + moveNum;
 
-              // 如果不是無限循環，不能大於或小於
-
+              // if right
               if (e.deltaX > 0) {
                 if (!this.runLoop && prevIndex < 0) {
                   prevIndex = 0;
@@ -610,6 +609,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
                 }
 
                 this.currentIndex = prevIndex;
+                // left
               } else {
                 if (!this.runLoop && nextIndex > this.maxRightIndex) {
                   nextIndex = this.maxRightIndex;
@@ -689,10 +689,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       if (state !== 0) {
         switch (state) {
           case -1:
-            this._currentIndex = (this.itemElms.length - 1);
+            this._currentIndex = (this.itemElms.length + index);
             break;
           case 1:
-            this._currentIndex = 0;
+            this._currentIndex = index % this._showNum - 1;
             break;
         }
 
@@ -700,15 +700,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         setTimeout(() => {
           // when loop, cancel transition, and jump to boundary, when animation end
           this.removeContainerTransition();
-          switch (state) {
-            case -1:
-              const distance = ((this.itemElms.length - 1) * this.elmWidth) - this.alignDistance;
-              this.left = -distance;
-              break;
-            case 1:
-              this.left = 0 + this.alignDistance;
-              break;
-          }
+
+          this.left = -(this._currentIndex * this.elmWidth) + this.alignDistance;
 
           // if it is any loop carousel, the next event need wait the timeout complete
           if (this.aniTime === this.speed) {
