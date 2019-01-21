@@ -275,11 +275,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
   private hammer: HammerManager;
 
-  private restart = new BehaviorSubject<any>(null);
-  private stopEvent = new Subject<any>();
-  private doNext: Observable<any>;
+  private saveTimeOut: Subscription;
   private doNextSub$: Subscription;
+  private doNext: Observable<any>;
+
+  private restart = new BehaviorSubject<any>(null);
   private speedChange = new BehaviorSubject(5000);
+  private stopEvent = new Subject<any>();
   private destroy$ = new Subject<any>();
 
   private _porgressWidth = 0;
@@ -697,20 +699,31 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         }
 
         const isFromAuto = this.isFromAuto;
-        setTimeout(() => {
-          // when loop, cancel transition, and jump to boundary, when animation end
-          this.removeContainerTransition();
+        if (this.saveTimeOut) {
+          this.saveTimeOut.unsubscribe();
+        }
 
-          this.left = -(this._currentIndex * this.elmWidth) + this.alignDistance;
+        if (isFromAuto) {
+          this.saveTimeOut = timer(this.aniTime).pipe(
+            switchMap(() => {
+              this.removeContainerTransition();
 
-          // if it is any loop carousel, the next event need wait the timeout complete
-          if (this.aniTime === this.speed) {
-            setTimeout(() => {
-              this.drawView(this.currentIndex, this.hasInitWriteValue, isFromAuto);
-            }, 50);
-          }
+              this.left = -(this._currentIndex * this.elmWidth) + this.alignDistance;
 
-        }, this.aniTime);
+              // if it is any loop carousel, the next event need wait the timeout complete
+              if (this.aniTime === this.speed) {
+                this.left = -((this._currentIndex + (this.direction === 'right' ? -1 : 1)) * this.elmWidth) + this.alignDistance;
+                return timer(50).pipe(
+                  tap(() => {
+                    this.drawView(this.currentIndex, this.hasInitWriteValue, isFromAuto);
+                  })
+                );
+              }
+              return of(null);
+            }),
+            takeUntil(this.stopEvent)
+          ).subscribe();
+        }
       }
     }
   }
