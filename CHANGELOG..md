@@ -8,6 +8,37 @@
 
 * **Prevent Drag click event trigger**: when hammer stop the click event will occur, fix that with document `touchend` and `mouseup`
 
+* **Drag Boundary Problem**: caculate with left by touch boundary, caculate the swipe index.
+
+
+# Break Change
+* **Infinite mode or autoplay mode**: We need add `<ng-template #infiniteContainer></ng-template>` and `#carouselContent` in the template, and add `[data]="avatars"` in the `ngx-hm-carousel`, to make the template in the angular life cycle, the example is below.
+
+```html
+  <section ngx-hm-carousel-container class="content">
+    <article class="item cursor-pointer"
+      ngx-hm-carousel-item
+      *ngFor="let avatar of avatars; let i = index"
+        [ngClass]="{'visible': currentIndex===i}">
+      <div class="img" (click)="click(i)"
+        [style.backgroundImage]="'url('+avatar.url+')'">
+        {{i}}
+      </div>
+    </article>
+    <ng-template #infiniteContainer></ng-template>
+  </section>
+
+  <ng-template #carouselContent let-avatar let-i="index">
+    <article class="item cursor-pointer"
+      [ngClass]="{'visible': currentIndex===i}">
+      <div class="img" (click)="click(i)"
+        [style.backgroundImage]="'url('+avatar.url+')'">
+        {{i}}
+      </div>
+    </article>
+  </ng-template>
+```
+
 ## 1.6.0
 
 ### Feature
