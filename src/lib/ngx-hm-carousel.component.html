@@ -1,4 +1,5 @@
-<div #parentChild class="carousel">
+<div #containerElm class="carousel">
+  <!-- main content -->
   <ng-content select="[ngx-hm-carousel-container]"></ng-content>
   <!-- left -->
   <div #prev *ngIf="contentPrev"
@@ -32,5 +33,7 @@
     </ng-container>
   </div>
 
-  <div class="mask" *ngIf="grabbing"></div>
+  <div class="mask" *ngIf="grabbing">
+    <ng-container *ngIf="leaveObs$ | async"></ng-container>
+  </div>
 </div>

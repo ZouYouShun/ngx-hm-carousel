@@ -17,14 +17,17 @@ import {
   Renderer2,
   TemplateRef,
   ViewChild,
+  ViewContainerRef,
+  EmbeddedViewRef,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { BehaviorSubject, forkJoin, fromEvent, interval, merge, Observable, of, Subject, Subscription, timer } from 'rxjs';
-import { bufferCount, switchMap, takeUntil, tap, filter, take } from 'rxjs/operators';
+import { bufferCount, switchMap, takeUntil, tap, filter } from 'rxjs/operators';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { resizeObservable } from './rxjs.observable.resize';
 import { NgxHmCarouselBreakPointUp } from './ngx-hm-carousel.model';
+import { DOCUMENT } from '@angular/common';
 
 // if the pane is paned .15, switch to the next pane.
 const PANBOUNDARY = 0.15;
@@ -41,7 +44,7 @@ const PANBOUNDARY = 0.15;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewInit, OnDestroy {
-  @ViewChild('parentChild') parentChild: ElementRef;
+  @ViewChild('containerElm') container: ElementRef;
   @ViewChild('prev') btnPrev: ElementRef;
   @ViewChild('next') btnNext: ElementRef;
   @ViewChild('progress') progressContainerElm: ElementRef;
@@ -52,6 +55,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @ContentChild('carouselDot') dotElm: TemplateRef<any>;
   @ContentChild('carouselProgress') progressElm: TemplateRef<any>;
 
+  @ContentChild('infiniteContainer', { read: ViewContainerRef }) infiniteContainer: ViewContainerRef;
+  @ContentChild('carouselContent') contentContent: TemplateRef<any>;
+
+  @Input() data: any[];
   @Input() aniTime = 400;
   @Input() aniClass = 'transition';
   @Input() aniClassAuto = this.aniClass;
@@ -64,6 +71,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @Input('autoplay-direction') direction: 'left' | 'right' = 'right';
   @Input('scroll-num') scrollNum = 1;
   @Input('drag-many') isDragMany = false;
+
+  @Input() breakpoint: NgxHmCarouselBreakPointUp[] = [];
+
   @Input('disable-drag')
   get disableDrag() {
     return this._disableDrag;
@@ -85,20 +95,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   get infinite() { return this._infinite; }
   set infinite(value) {
     this._infinite = value;
-    if (this.LatestElm_clone.length) {
-      this.LatestElm_clone.forEach(l => {
-        this.addStyle(l, {
-          visibility: this.runLoop ? 'visible' : 'hidden'
-        });
+
+    this.infiniteElmRefs.forEach((ref) => {
+      this.addStyle(ref.rootNodes[0], {
+        visibility: this.runLoop ? 'visible' : 'hidden'
       });
-    }
-    if (this.firstElm_clone.length) {
-      this.firstElm_clone.forEach(f => {
-        this.addStyle(f, {
-          visibility: this.runLoop ? 'visible' : 'hidden'
-        });
-      });
-    }
+    });
   }
 
   @Input('autoplay-speed')
@@ -118,8 +120,33 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       this._showNum = +value;
       if (this.rootElm) {
         this.setViewWidth();
-        this.reSetVariable();
+        this.reSetAlignDistance();
       }
+    }
+  }
+
+  @Input('autoplay')
+  get autoplay() { return this._autoplay; }
+  set autoplay(value) {
+    if (isPlatformBrowser(this.platformId)) {
+      if (this.elms) {
+        this.progressWidth = 0;
+        if (value) {
+          this._zone.runOutsideAngular(() => {
+            this.doNextSub$ = this.doNext.subscribe();
+          });
+        } else {
+          if (this.doNextSub$) { this.doNextSub$.unsubscribe(); }
+        }
+      }
+    }
+    this._autoplay = value;
+    // if set autoplay, then the infinite is true
+    if (value) {
+      this._tmpInfinite = this.infinite;
+      this.infinite = true;
+    } else {
+      this.infinite = this._tmpInfinite;
     }
   }
 
@@ -156,40 +183,17 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     this.isFromAuto = false;
   }
 
-  @Input('autoplay')
-  get autoplay() { return this._autoplay; }
-  set autoplay(value) {
-    if (isPlatformBrowser(this.platformId)) {
-      if (this.elms) {
-        this.progressWidth = 0;
-        if (value) {
-          this._zone.runOutsideAngular(() => {
-            this.doNextSub$ = this.doNext.subscribe();
-          });
-        } else {
-          if (this.doNextSub$) { this.doNextSub$.unsubscribe(); }
-        }
-      }
-    }
-    this._autoplay = value;
-    // if set autoplay, then the infinite is true
-    if (value) {
-      this._tmpInfinite = this.infinite;
-      this.infinite = true;
-    } else {
-      this.infinite = this._tmpInfinite;
-    }
-  }
-
   get progressWidth() { return this._porgressWidth; }
   set progressWidth(value) {
     if (this.progressElm !== undefined && this.autoplay) {
       this._porgressWidth = value;
-      this._renderer.setStyle((<HTMLElement>this.progressContainerElm.nativeElement).children[0], 'width', `${this.progressWidth}%`);
+      this._renderer.setStyle(
+        (<HTMLElement>this.progressContainerElm.nativeElement).children[0],
+        'width',
+        `${this.progressWidth}%`
+      );
     }
   }
-
-  @Input() breakpoint: NgxHmCarouselBreakPointUp[] = [];
 
   get grabbing() { return this._grabbing; }
   set grabbing(value: boolean) {
@@ -209,8 +213,25 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
   }
 
+  // using for check mouse or touchend
+  leaveObs$ = merge(
+    fromEvent(this._document, 'mouseup'),
+    fromEvent(this._document, 'touchend')
+  ).pipe(
+    tap((e: Event) => {
+      this.grabbing = false;
+      e.stopPropagation();
+      e.preventDefault();
+    })
+  );
+
   private set left(value: number) {
-    this._renderer.setStyle(this.containerElm, 'transform', `translateX(${value}px)`);
+
+    if (isPlatformBrowser(this.platformId)) {
+      this._renderer.setStyle(this.containerElm, 'transform', `translateX(${value}px)`);
+    } else {
+      this._renderer.setStyle(this.containerElm, 'transform', `translateX(${value}%)`);
+    }
   }
 
   private get maxRightIndex() {
@@ -226,18 +247,19 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         addIndex = <number>this.showNum - 1;
         break;
     }
-    return ((this.itemElms.length - 1) - <number>this.showNum + 1) + addIndex;
+    return ((this.itemElms.length - 1) - this._showNum + 1) + addIndex;
   }
 
   private get runLoop() { return this.autoplay || this.infinite; }
   private get lengthOne() { return this.itemElms.length === 1; }
 
-  constructor(
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private _renderer: Renderer2,
-    private _zone: NgZone,
-    private _cd: ChangeDetectorRef
-  ) { }
+  private get rootElmWidth() {
+    return (isPlatformBrowser(this.platformId) ? this.rootElm.getBoundingClientRect().width : 100);
+  }
+
+  private set containerElmWidth(value) {
+    this.setStyle(this.containerElm, 'width', value);
+  }
 
   private isFromAuto = true;
   private isAutoNum = false;
@@ -249,8 +271,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private containerElm: HTMLElement;
 
   private elms: Array<HTMLElement>;
-  private firstElm_clone: HTMLElement[] = [];
-  private LatestElm_clone: HTMLElement[] = [];
+  private infiniteElmRefs: Array<EmbeddedViewRef<any>> = [];
+
   private hammer: HammerManager;
 
   private restart = new BehaviorSubject<any>(null);
@@ -276,16 +298,16 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   // when init first, not set with animation
   private hasInitWriteValue = false;
 
-  private get rootElmWidth() {
-    return (isPlatformBrowser(this.platformId) ? this.rootElm.getBoundingClientRect().width : 100);
-  }
-
-  private set containerElmWidth(value) {
-    this.setStyle(this.containerElm, 'width', value);
-  }
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) private _document,
+    private _renderer: Renderer2,
+    private _zone: NgZone,
+    private _cd: ChangeDetectorRef
+  ) { }
 
   ngAfterViewInit() {
-    this.rootElm = this.parentChild.nativeElement;
+    this.rootElm = this.container.nativeElement;
     this.containerElm = this.rootElm.children[0] as HTMLElement;
 
     this.init();
@@ -315,25 +337,36 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     ).pipe(
       takeUntil(this.destroy$),
     ).subscribe();
-  }
 
-  private init() {
-    this.initVariable();
-    this.setViewWidth(true);
-    this.reSetVariable();
-    if (!this.disableDrag) {
-      this.hammer = this.bindHammer();
-    }
-    this.drawView(this.currentIndex, false);
-    if (isPlatformBrowser(this.platformId)) {
-      this.addInfiniteElm();
-    }
   }
 
   ngOnDestroy() {
     this.destroy();
     this.destroy$.next();
     this.destroy$.unsubscribe();
+  }
+  writeValue(value: any) {
+    if (value || value === 0) {
+      this.currentIndex = value;
+      this.hasInitWriteValue = true;
+    }
+  }
+  registerOnChange(fn: (value: any) => any) { this.onChange = fn; }
+  registerOnTouched(fn: () => any) { this.onTouched = fn; }
+  private onChange = (_: any) => { };
+  private onTouched = () => { };
+
+  private init() {
+    this.initVariable();
+    this.setViewWidth(true);
+    this.reSetAlignDistance();
+    if (!this.disableDrag) {
+      this.hammer = this.bindHammer();
+    }
+    this.drawView(this.currentIndex, false);
+    if (isPlatformBrowser(this.platformId) && this.runLoop) {
+      this.addInfiniteElm();
+    }
   }
 
   private destroy() {
@@ -348,60 +381,53 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
   }
 
-  writeValue(value: any) {
-    if (value || value === 0) {
-      this.currentIndex = value;
-      this.hasInitWriteValue = true;
-    }
-  }
-  registerOnChange(fn: (value: any) => any) { this.onChange = fn; }
-  registerOnTouched(fn: () => any) { this.onTouched = fn; }
-  private onChange = (_: any) => { };
-  private onTouched = () => { };
-
   private addInfiniteElm() {
     for (let i = 1; i <= this.showNum; i++) {
-
-      const first = this.elms[(this.itemElms.length - i)].cloneNode(true) as HTMLElement;
-      this.addStyle(first, {
+      const elm = this.infiniteContainer.createEmbeddedView(this.contentContent, {
+        $implicit: this.data[this.itemElms.length - i],
+        index: this.itemElms.length - i
+      });
+      this.addStyle(elm.rootNodes[0], {
         position: 'absolute',
         transform: `translateX(-${100 * i}%)`,
         visibility: this.runLoop ? 'visible' : 'hidden'
       });
+      this.setStyle(elm.rootNodes[0], 'width', this.elmWidth);
 
-      this.firstElm_clone.push(first);
-
-
-      const last = this.elms[i - 1].cloneNode(true) as HTMLElement;
-      this.addStyle(last, {
+      const elm2 = this.infiniteContainer.createEmbeddedView(this.contentContent, {
+        $implicit: this.data[i - 1],
+        index: i - 1
+      });
+      this.addStyle(elm2.rootNodes[0], {
         position: 'absolute',
         right: 0,
         top: 0,
         transform: `translateX(${100 * i}%)`,
         visibility: this.runLoop ? 'visible' : 'hidden'
       });
+      this.setStyle(elm2.rootNodes[0], 'width', this.elmWidth);
 
-      this.LatestElm_clone.push(last);
+      elm.detectChanges();
+      elm2.detectChanges();
 
-      this._renderer.insertBefore(this.containerElm, first, this.containerElm.children[0]);
-      this._renderer.appendChild(this.containerElm, last);
+      this.infiniteElmRefs.push(elm);
+      this.infiniteElmRefs.push(elm2);
     }
-
 
   }
 
   private removeInfiniteElm() {
-    for (let i = this.firstElm_clone.length - 1; i >= 0; i--) {
-      this._renderer.removeChild(this.containerElm, this.firstElm_clone[i]);
-      this._renderer.removeChild(this.containerElm, this.LatestElm_clone[i]);
-    }
-    this.firstElm_clone = [];
-    this.LatestElm_clone = [];
+    this.infiniteElmRefs.forEach(a => {
+      a.detach();
+      a.destroy();
+    });
+    this.infiniteContainer.clear();
+    this.infiniteElmRefs = [];
   }
 
   private containerResize() {
-    this.reSetVariable();
     this.setViewWidth();
+    this.reSetAlignDistance();
 
     // 因為不能滑了，所以要回到第一個，以確保全部都有顯示
     if (this.align !== 'center' && this.showNum >= this.elms.length) {
@@ -463,7 +489,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     });
   }
 
-  private reSetVariable() {
+  private reSetAlignDistance() {
     switch (this.align) {
       case 'center':
         this.alignDistance = (this.rootElmWidth - this.elmWidth) / 2;
@@ -486,7 +512,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       // remain one elm height
       this._renderer.addClass(this.containerElm, 'ngx-hm-carousel-display-npwrap');
     }
-    this.elmWidth = this.rootElmWidth / <number>this.showNum;
+    this.elmWidth = this.rootElmWidth / this._showNum;
 
     this._renderer.removeClass(this.containerElm, 'ngx-hm-carousel-display-npwrap');
 
@@ -494,16 +520,13 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
     this._renderer.setStyle(this.containerElm, 'position', 'relative');
 
+    this.infiniteElmRefs.forEach((ref) => {
+      this.setStyle(ref.rootNodes[0], 'width', this.elmWidth);
+    });
     this.elms.forEach((elm: HTMLElement) => {
       this.setStyle(elm, 'width', this.elmWidth);
     });
 
-    if (this.firstElm_clone.length) {
-      for (let i = this.firstElm_clone.length - 1; i >= 0; i--) {
-        this.setStyle(this.firstElm_clone[i], 'width', this.elmWidth);
-        this.setStyle(this.LatestElm_clone[i], 'width', this.elmWidth);
-      }
-    }
   }
 
   private bindHammer() {
@@ -540,7 +563,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             this.grabbing = true;
             // When show-num is bigger than length, stop hammer
             if (this.align !== 'center' && this.showNum >= this.elms.length) {
-              this.grabbing = false;
               this.hammer.stop(true);
               return;
             }
@@ -561,19 +583,16 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
                 } else {
                   this.currentIndex += this.scrollNum;
                 }
-                this.grabbing = false;
                 this.hammer.stop(true);
                 return;
               }
             }
             break;
           case 'pancancel':
-            this.grabbing = false;
             this.drawView(this.currentIndex);
             break;
 
           case 'panend':
-            this.grabbing = false;
 
             if (Math.abs(e.deltaX) > this.elmWidth * PANBOUNDARY) {
               const moveNum = this.isDragMany ?
@@ -582,8 +601,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
               let prevIndex = this.currentIndex - moveNum;
               let nextIndex = this.currentIndex + moveNum;
 
-              // 如果不是無限循環，不能大於或小於
-
+              // if right
               if (e.deltaX > 0) {
                 if (!this.runLoop && prevIndex < 0) {
                   prevIndex = 0;
@@ -591,6 +609,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
                 }
 
                 this.currentIndex = prevIndex;
+                // left
               } else {
                 if (!this.runLoop && nextIndex > this.maxRightIndex) {
                   nextIndex = this.maxRightIndex;
@@ -670,10 +689,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       if (state !== 0) {
         switch (state) {
           case -1:
-            this._currentIndex = (this.itemElms.length - 1);
+            this._currentIndex = (this.itemElms.length + index);
             break;
           case 1:
-            this._currentIndex = 0;
+            this._currentIndex = index % this._showNum - 1;
             break;
         }
 
@@ -681,15 +700,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         setTimeout(() => {
           // when loop, cancel transition, and jump to boundary, when animation end
           this.removeContainerTransition();
-          switch (state) {
-            case -1:
-              const distance = ((this.itemElms.length - 1) * this.elmWidth) - this.alignDistance;
-              this.left = -distance;
-              break;
-            case 1:
-              this.left = 0 + this.alignDistance;
-              break;
-          }
+
+          this.left = -(this._currentIndex * this.elmWidth) + this.alignDistance;
 
           // if it is any loop carousel, the next event need wait the timeout complete
           if (this.aniTime === this.speed) {
@@ -727,7 +739,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private getAutoNum() {
-    const curr_width = this.rootElmWidth;
     // check user has had set breakpoint
     if (this.breakpoint.length > 0) {
       // get the last bigget point
@@ -744,6 +755,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     // system init show number
     const initNum = 3;
     // 610
+    const curr_width = this.rootElmWidth;
     if (curr_width > 300) {
       return Math.floor(initNum + (curr_width / 200));
     }
