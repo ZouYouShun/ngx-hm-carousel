@@ -752,6 +752,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private getAutoNum() {
+    const curr_width = this.rootElmWidth;
     // check user has had set breakpoint
     if (this.breakpoint.length > 0) {
       // get the last bigget point
@@ -768,7 +769,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     // system init show number
     const initNum = 3;
     // 610
-    const curr_width = this.rootElmWidth;
     if (curr_width > 300) {
       return Math.floor(initNum + (curr_width / 200));
     }
