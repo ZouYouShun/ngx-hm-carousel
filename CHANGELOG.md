@@ -1,3 +1,8 @@
+## 1.6.3
+
+### But Fix
+* **show-number auto with breakpoint problem**: fix problem with breakpoint.
+
 ## 1.6.2
 
 ### But Fix
