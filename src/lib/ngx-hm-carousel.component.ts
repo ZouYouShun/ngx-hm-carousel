@@ -200,6 +200,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     if (this._grabbing !== value) {
       // console.log(value);
       this._zone.run(() => {
+        this._grabbing = value;
         if (value) {
           this._renderer.addClass(this.containerElm, 'grabbing');
         } else {
@@ -207,7 +208,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           this.callRestart();
           this._renderer.removeClass(this.containerElm, 'grabbing');
         }
-        this._grabbing = value;
         this._cd.detectChanges();
       });
     }
@@ -391,6 +391,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       });
       this.addStyle(elm.rootNodes[0], {
         position: 'absolute',
+        // boxShadow: `0 0 0 5000px rgba(200, 75, 75, 0.5) inset`,
         transform: `translateX(-${100 * i}%)`,
         visibility: this.runLoop ? 'visible' : 'hidden'
       });
@@ -401,6 +402,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         index: i - 1
       });
       this.addStyle(elm2.rootNodes[0], {
+        // boxShadow: `0 0 0 5000px rgba(200, 75, 75, 0.5) inset`,
         position: 'absolute',
         right: 0,
         top: 0,
@@ -688,13 +690,15 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       let state = 0;
       state = (index < 0) ? -1 : state;
       state = (index > (this.itemElms.length - 1)) ? 1 : state;
+
+      // index = index % this._showNum;
       if (state !== 0) {
         switch (state) {
           case -1:
-            this._currentIndex = (this.itemElms.length + index);
+            this._currentIndex = (this.itemElms.length + index) % this.itemElms.length;
             break;
           case 1:
-            this._currentIndex = index % this._showNum;
+            this._currentIndex = index % this.itemElms.length;
             break;
         }
 
@@ -703,30 +707,29 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           this.saveTimeOut.unsubscribe();
         }
 
-        if (isFromAuto) {
-          this.saveTimeOut = timer(this.aniTime).pipe(
-            switchMap(() => {
+        this.saveTimeOut = timer(this.aniTime).pipe(
+          switchMap(() => {
+            // if it is any loop carousel, the next event need wait the timeout complete
+            if (this.aniTime === this.speed) {
               this.removeContainerTransition();
-
-              this.left = -(this._currentIndex * this.elmWidth) + this.alignDistance;
-
-              // if it is any loop carousel, the next event need wait the timeout complete
-              if (this.aniTime === this.speed) {
-                this.left = -((this._currentIndex + (this.direction === 'right' ? -1 : 1)) * this.elmWidth) + this.alignDistance;
-                return timer(50).pipe(
-                  tap(() => {
-                    this.drawView(this.currentIndex, this.hasInitWriteValue, isFromAuto);
-                  })
-                );
-              }
-              return of(null);
-            }),
-            takeUntil(this.stopEvent)
-          ).subscribe();
-        }
+              this.left = -((this._currentIndex - state) * this.elmWidth) + this.alignDistance;
+              return timer(50).pipe(
+                tap(() => {
+                  this.drawView(this.currentIndex, this.hasInitWriteValue, isFromAuto);
+                })
+              );
+            } else {
+              this.drawView(this.currentIndex, false);
+            }
+            return of(null);
+          }),
+          takeUntil(this.stopEvent)
+        ).subscribe();
       }
     }
+
   }
+
 
   private outOfBound(type) {
     switch (type) {
