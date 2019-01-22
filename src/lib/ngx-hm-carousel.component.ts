@@ -694,7 +694,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             this._currentIndex = (this.itemElms.length + index);
             break;
           case 1:
-            this._currentIndex = index % this._showNum - 1;
+            this._currentIndex = index % this._showNum;
             break;
         }
 
