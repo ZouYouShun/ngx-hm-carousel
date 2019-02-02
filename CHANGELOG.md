@@ -1,3 +1,8 @@
+## 1.6.5-bata.1
+
+### But Fix
+* **fix when infinite element not exist problem**:fix when infinite element not init, clear cause carousel break problem.
+
 ## 1.6.4
 
 ### But Fix

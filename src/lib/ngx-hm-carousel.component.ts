@@ -425,7 +425,9 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       a.detach();
       a.destroy();
     });
-    this.infiniteContainer.clear();
+    if (this.infiniteContainer) {
+      this.infiniteContainer.clear();
+    }
     this.infiniteElmRefs = [];
   }
 
