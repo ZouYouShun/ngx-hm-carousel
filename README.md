@@ -250,6 +250,7 @@ $transition_time:.2s;
 | `show-num`               | no       | 1                     | number  or 'auto' | ngx-hm-carousel | how many number items to show once |
 | `scroll-num`             | no       | 1                     | number          | ngx-hm-carousel | how many number with each scroll |
 | `drag-many`              | no       | false                 | boolean         | ngx-hm-carousel | is can scroll many item once,  simulate with scrollbar |
+| `swipe-velocity`              | no       | 0.3                 | number         | ngx-hm-carousel Minimal velocity required before recognizing, unit is in px per ms. |
 | `align`               | no       | 'left'                 | 'left' or 'right'|'center' | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
 | `infinite`               | no       | false                 | boolean         | ngx-hm-carousel | is the carousel will move loop |
 | `data`               | no       | undefined                 | any[]         | ngx-hm-carousel | the data you using with `*ngFor`, it need when infinite mode or autoplay mode |

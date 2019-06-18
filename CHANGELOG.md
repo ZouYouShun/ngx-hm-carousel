@@ -1,3 +1,10 @@
+## 1.7.0
+
+### But Fix
+* **Upgrade to angular 8.0+**:upgrade the angualr version with ng 8.
+### Feature
+* **swipe-velocity**:add Input `[swipe-velocity]` to custom swipe-speed
+
 ## 1.6.5-bata.1
 
 ### But Fix

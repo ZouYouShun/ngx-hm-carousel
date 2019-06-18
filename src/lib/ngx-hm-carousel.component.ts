@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -7,6 +7,7 @@ import {
   ContentChild,
   ContentChildren,
   ElementRef,
+  EmbeddedViewRef,
   forwardRef,
   Inject,
   Input,
@@ -18,16 +19,14 @@ import {
   TemplateRef,
   ViewChild,
   ViewContainerRef,
-  EmbeddedViewRef,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { BehaviorSubject, forkJoin, fromEvent, interval, merge, Observable, of, Subject, Subscription, timer } from 'rxjs';
-import { bufferCount, switchMap, takeUntil, tap, filter } from 'rxjs/operators';
+import { bufferCount, filter, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
-import { resizeObservable } from './rxjs.observable.resize';
 import { NgxHmCarouselBreakPointUp } from './ngx-hm-carousel.model';
-import { DOCUMENT } from '@angular/common';
+import { resizeObservable } from './rxjs.observable.resize';
 
 // if the pane is paned .15, switch to the next pane.
 const PANBOUNDARY = 0.15;
@@ -44,24 +43,25 @@ const PANBOUNDARY = 0.15;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewInit, OnDestroy {
-  @ViewChild('containerElm') container: ElementRef;
-  @ViewChild('prev') btnPrev: ElementRef;
-  @ViewChild('next') btnNext: ElementRef;
-  @ViewChild('progress') progressContainerElm: ElementRef;
+  @ViewChild('containerElm', { static: false }) container: ElementRef;
+  @ViewChild('prev', { static: false }) btnPrev: ElementRef;
+  @ViewChild('next', { static: false }) btnNext: ElementRef;
+  @ViewChild('progress', { static: false }) progressContainerElm: ElementRef;
   // get all item elms
   @ContentChildren(NgxHmCarouselItemDirective, { read: ElementRef }) itemElms: QueryList<ElementRef>;
-  @ContentChild('carouselPrev') contentPrev: TemplateRef<any>;
-  @ContentChild('carouselNext') contentNext: TemplateRef<any>;
-  @ContentChild('carouselDot') dotElm: TemplateRef<any>;
-  @ContentChild('carouselProgress') progressElm: TemplateRef<any>;
+  @ContentChild('carouselPrev', { static: false }) contentPrev: TemplateRef<any>;
+  @ContentChild('carouselNext', { static: false }) contentNext: TemplateRef<any>;
+  @ContentChild('carouselDot', { static: false }) dotElm: TemplateRef<any>;
+  @ContentChild('carouselProgress', { static: false }) progressElm: TemplateRef<any>;
 
-  @ContentChild('infiniteContainer', { read: ViewContainerRef }) infiniteContainer: ViewContainerRef;
-  @ContentChild('carouselContent') contentContent: TemplateRef<any>;
+  @ContentChild('infiniteContainer', { static: false, read: ViewContainerRef }) infiniteContainer: ViewContainerRef;
+  @ContentChild('carouselContent', { static: false }) contentContent: TemplateRef<any>;
 
   @Input() data: any[];
   @Input() aniTime = 400;
   @Input() aniClass = 'transition';
   @Input() aniClassAuto = this.aniClass;
+  @Input() swipe;
 
   // this default autoplay animation is same as aniClass
   @Input() align: 'left' | 'center' | 'right' = 'center';
@@ -71,6 +71,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @Input('autoplay-direction') direction: 'left' | 'right' = 'right';
   @Input('scroll-num') scrollNum = 1;
   @Input('drag-many') isDragMany = false;
+  @Input('swipe-velocity') swipeVelocity = 0.3;
 
   @Input() breakpoint: NgxHmCarouselBreakPointUp[] = [];
 
@@ -188,7 +189,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     if (this.progressElm !== undefined && this.autoplay) {
       this._porgressWidth = value;
       this._renderer.setStyle(
-        (<HTMLElement>this.progressContainerElm.nativeElement).children[0],
+        (this.progressContainerElm.nativeElement as HTMLElement).children[0],
         'width',
         `${this.progressWidth}%`
       );
@@ -226,7 +227,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   );
 
   private set left(value: number) {
-
     if (isPlatformBrowser(this.platformId)) {
       this._renderer.setStyle(this.containerElm, 'transform', `translateX(${value}px)`);
     } else {
@@ -241,10 +241,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
         addIndex = 0;
         break;
       case 'center':
-        addIndex = <number>this.showNum - 1;
+        addIndex = this.showNum as number - 1;
         break;
       case 'right':
-        addIndex = <number>this.showNum - 1;
+        addIndex = this.showNum as number - 1;
         break;
     }
     return ((this.itemElms.length - 1) - this._showNum + 1) + addIndex;
@@ -257,7 +257,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     return (isPlatformBrowser(this.platformId) ? this.rootElm.getBoundingClientRect().width : 100);
   }
 
-  private set containerElmWidth(value) {
+  private set containerElmWidth(value: number) {
     this.setStyle(this.containerElm, 'width', value);
   }
 
@@ -291,10 +291,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   private _infinite = false;
   private _tmpInfinite = false;
   private _grabbing = false;
+  private _disableDrag = false;
 
   private panCount = 0;
 
-  private _disableDrag = false;
 
   // this variable use for check the init value is write with ngModel,
   // when init first, not set with animation
@@ -347,12 +347,14 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     this.destroy$.next();
     this.destroy$.unsubscribe();
   }
+
   writeValue(value: any) {
     if (value || value === 0) {
       this.currentIndex = value;
       this.hasInitWriteValue = true;
     }
   }
+
   registerOnChange(fn: (value: any) => any) { this.onChange = fn; }
   registerOnTouched(fn: () => any) { this.onTouched = fn; }
   private onChange = (_: any) => { };
@@ -541,8 +543,11 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     }
     return this._zone.runOutsideAngular(() => {
 
-      const hm = new Hammer(this.containerElm);
-      hm.get('pan').set({ direction: Hammer.DIRECTION_HORIZONTAL });
+      const hm = new Hammer.Manager(this.containerElm);
+
+      const pan = new Hammer.Pan({ direction: Hammer.DIRECTION_HORIZONTAL, threshold: 0 });
+
+      hm.add(pan);
 
       hm.on('panleft panright panend pancancel', (e: HammerInput) => {
         // console.log(e.type);
@@ -599,33 +604,29 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
             break;
 
           case 'panend':
-
+            // if boundary more than rate
             if (Math.abs(e.deltaX) > this.elmWidth * PANBOUNDARY) {
               const moveNum = this.isDragMany ?
                 Math.ceil(Math.abs(e.deltaX) / this.elmWidth) : this.scrollNum;
 
-              let prevIndex = this.currentIndex - moveNum;
-              let nextIndex = this.currentIndex + moveNum;
+              const prevIndex = this.currentIndex - moveNum;
+              const nextIndex = this.currentIndex + moveNum;
 
               // if right
               if (e.deltaX > 0) {
-                if (!this.runLoop && prevIndex < 0) {
-                  prevIndex = 0;
-                  this.drawView(0);
-                }
-
-                this.currentIndex = prevIndex;
+                this.goPrev(prevIndex);
                 // left
               } else {
-                if (!this.runLoop && nextIndex > this.maxRightIndex) {
-                  nextIndex = this.maxRightIndex;
-                  this.drawView(nextIndex);
-                }
-                this.currentIndex = nextIndex;
+                this.goNext(nextIndex);
               }
               break;
+            } else if (e.velocityX < -this.swipeVelocity && e.distance > 10) {
+              this.goNext(this.currentIndex + this.scrollNum);
+            } else if (e.velocityX > this.swipeVelocity && e.distance > 10) {
+              this.goPrev(this.currentIndex - this.scrollNum);
+            } else {
+              this.drawView(this.currentIndex);
             }
-            this.drawView(this.currentIndex);
             break;
         }
       });
@@ -633,6 +634,22 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
       return hm;
     });
 
+  }
+
+  private goPrev(prevIndex: number) {
+    if (!this.runLoop && prevIndex < 0) {
+      prevIndex = 0;
+      this.drawView(0);
+    }
+    this.currentIndex = prevIndex;
+  }
+
+  private goNext(nextIndex: number) {
+    if (!this.runLoop && nextIndex > this.maxRightIndex) {
+      nextIndex = this.maxRightIndex;
+      this.drawView(nextIndex);
+    }
+    this.currentIndex = nextIndex;
   }
 
   private bindClick() {
@@ -661,7 +678,6 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private drawView(index: number, isAnimation = true, isFromAuto = this.isFromAuto) {
-
     // move element only on length is more than 1
     if (this.elms.length > 1) {
       this.removeContainerTransition();
@@ -757,12 +773,12 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
   private getAutoNum() {
-    const curr_width = this.rootElmWidth;
+    const currWidth = this.rootElmWidth;
     // check user has had set breakpoint
     if (this.breakpoint.length > 0) {
       // get the last bigget point
       const now = this.breakpoint.find((b) => {
-        return b.width >= curr_width;
+        return b.width >= currWidth;
       });
       // if find value, it is current width
       if (now) {
@@ -774,8 +790,8 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
     // system init show number
     const initNum = 3;
     // 610
-    if (curr_width > 300) {
-      return Math.floor(initNum + (curr_width / 200));
+    if (currWidth > 300) {
+      return Math.floor(initNum + (currWidth / 200));
     }
     return initNum;
   }
@@ -798,4 +814,5 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   }
 
 }
+
 
