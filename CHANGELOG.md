@@ -1,3 +1,8 @@
+## 1.7.1
+
+### Feature
+* **pan-boundary**:add Input `[pan-boundary]` to user move picture with the container width rate, when more than that rate distance, it will go to next or prev.
+
 ## 1.7.0
 
 ### But Fix

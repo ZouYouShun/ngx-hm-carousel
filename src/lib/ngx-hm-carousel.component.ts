@@ -28,9 +28,6 @@ import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { NgxHmCarouselBreakPointUp } from './ngx-hm-carousel.model';
 import { resizeObservable } from './rxjs.observable.resize';
 
-// if the pane is paned .15, switch to the next pane.
-const PANBOUNDARY = 0.15;
-
 @Component({
   selector: 'ngx-hm-carousel',
   templateUrl: './ngx-hm-carousel.component.html',
@@ -62,6 +59,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @Input() aniClass = 'transition';
   @Input() aniClassAuto = this.aniClass;
   @Input() swipe;
+  @Input('pan-doundary') panBoundary = 0.15;
 
   // this default autoplay animation is same as aniClass
   @Input() align: 'left' | 'center' | 'right' = 'center';
@@ -605,7 +603,10 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
 
           case 'panend':
             // if boundary more than rate
-            if (Math.abs(e.deltaX) > this.elmWidth * PANBOUNDARY) {
+            if (
+              this.panBoundary &&
+              Math.abs(e.deltaX) > this.elmWidth * this.panBoundary
+            ) {
               const moveNum = this.isDragMany ?
                 Math.ceil(Math.abs(e.deltaX) / this.elmWidth) : this.scrollNum;
 
