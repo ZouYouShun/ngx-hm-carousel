@@ -240,27 +240,27 @@ $transition_time:.2s;
 
 | Attribute                 | Necessary | Default value         | Type            | Location           | Description        |
 | ------------------------ | -------- | --------------------- | --------------- | ------------------ | ------------------ |
-| `autoplay`               | no       | false                 | boolean         | ngx-hm-carousel | carousel auto play confing |
-| `autoplay-speed`         | no       | 5000 (ms)             | number          | ngx-hm-carousel | auto play speed |
-| `between-delay`          | no       | 8000 (ms)             | number          | ngx-hm-carousel | each auto play between time |
-| `autoplay-direction`     | no       | 'right'               |'left' or 'right'| ngx-hm-carousel | auto play direction       |
-| `mourse-enable`          | no       | false                 | boolean         | ngx-hm-carousel | is mourse moveover stop the auto play |
-| `autoplay`               | no       | false                 | boolean         | ngx-hm-carousel | carousel auto play confing |
+| `autoplay`               | no       | false                 | `boolean`         | ngx-hm-carousel | carousel auto play confing |
+| `autoplay-speed`         | no       | 5000 (ms)             | `number`          | ngx-hm-carousel | auto play speed |
+| `between-delay`          | no       | 8000 (ms)             | `number`          | ngx-hm-carousel | each auto play between time |
+| `autoplay-direction`     | no       | 'right'               |`'left'` or `'right'`| ngx-hm-carousel | auto play direction       |
+| `mourse-enable`          | no       | false                 | `boolean`         | ngx-hm-carousel | is mourse moveover stop the auto play |
+| `autoplay`               | no       | false                 | `boolean`         | ngx-hm-carousel | carousel auto play confing |
 | `[breakpoint]`           | no       | []                 | `NgxHmCarouselBreakPointUp`         | ngx-hm-carousel | switch show number with own logic like boostrap scss media-breakpoint-up |
-| `show-num`               | no       | 1                     | number  or 'auto' | ngx-hm-carousel | how many number items to show once |
-| `scroll-num`             | no       | 1                     | number          | ngx-hm-carousel | how many number with each scroll |
-| `drag-many`              | no       | false                 | boolean         | ngx-hm-carousel | is can scroll many item once,  simulate with scrollbar |
-| `swipe-velocity`              | no       | 0.3                 | number         | ngx-hm-carousel | Minimal velocity required before recognizing, unit is in px per ms. |
-| `pan-boundary`              | no       | 0.15                 | number | false        | ngx-hm-carousel| user move picture with the container width rate, when more than that rate, it will go to next or prev, set false will never move with distance rate |
-| `align`               | no       | 'left'                 | 'left' or 'right'|'center' | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
-| `infinite`               | no       | false                 | boolean         | ngx-hm-carousel | is the carousel will move loop |
-| `data`               | no       | undefined                 | any[]         | ngx-hm-carousel | the data you using with `*ngFor`, it need when infinite mode or autoplay mode |
-| `aniTime`               | no       | 400                 | number         | ngx-hm-carousel | when `infinite` is true, the animation time with item |
-| `aniClass`               | no       | 'transition'                 | string         | ngx-hm-carousel | this class will add when carousel touch drap or click change index |
-| `aniClassAuto`               | no       | using `aniClass`      | string         | ngx-hm-carousel | this class will add when carousel auto play |
-| `disable-drag`               | no       | false                 | boolean         | ngx-hm-carousel | disable drag event with touch and mouse pan moving|
-| `not-follow-pan`               | no       | false                | boolean         | ngx-hm-carousel | disable when drag occur the child element will follow touch point. |
-| `[(ngModel)]`               | no       | 0                 | number         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |
+| `show-num`               | no       | 1                     | `number`  or `'auto'` | ngx-hm-carousel | how many number items to show once |
+| `scroll-num`             | no       | 1                     | `number`          | ngx-hm-carousel | how many number with each scroll |
+| `drag-many`              | no       | false                 | `boolean`         | ngx-hm-carousel | is can scroll many item once,  simulate with scrollbar |
+| `swipe-velocity`              | no       | 0.3                 | `number`         | ngx-hm-carousel | Minimal velocity required before recognizing, unit is in px per ms. |
+| `pan-boundary`              | no       | 0.15                 | `number` of `false`        | ngx-hm-carousel| user move picture with the container width rate, when more than that rate, it will go to next or prev, set false will never move with distance rate |
+| `align`               | no       | 'left'                 | `'left'` or `'right'` or `'center'` | ngx-hm-carousel | when show-num is bigger than 1, the first item align |
+| `infinite`               | no       | false                 | `boolean`         | ngx-hm-carousel | is the carousel will move loop |
+| `data`               | no       | undefined                 | `any[]`         | ngx-hm-carousel | the data you using with `*ngFor`, it need when infinite mode or autoplay mode |
+| `aniTime`               | no       | 400                 | `number`         | ngx-hm-carousel | when `infinite` is true, the animation time with item |
+| `aniClass`               | no       | 'transition'                 | `string`         | ngx-hm-carousel | this class will add when carousel touch drap or click change index |
+| `aniClassAuto`               | no       |  'aniClass'      | `string`         | ngx-hm-carousel | this class will add when carousel auto play |
+| `disable-drag`               | no       | false                 | `boolean`         | ngx-hm-carousel | disable drag event with touch and mouse pan moving|
+| `not-follow-pan`               | no       | false                | `boolean`         | ngx-hm-carousel | disable when drag occur the child element will follow touch point. |
+| `[(ngModel)]`               | no       | 0                 | `number`         | ngx-hm-carousel | You can bind ngModel with this carousel, it will two way binding with current index. You also can use `(ngModelChange)="change($event)"` with that. |
 
 
 ```ts
