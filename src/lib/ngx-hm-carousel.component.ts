@@ -59,7 +59,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @Input() aniClass = 'transition';
   @Input() aniClassAuto = this.aniClass;
   @Input() swipe;
-  @Input('pan-doundary') panBoundary = 0.15;
+  @Input('pan-boundary') panBoundary = 0.15;
 
   // this default autoplay animation is same as aniClass
   @Input() align: 'left' | 'center' | 'right' = 'center';
