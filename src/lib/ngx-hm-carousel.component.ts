@@ -59,7 +59,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
   @Input() aniClass = 'transition';
   @Input() aniClassAuto = this.aniClass;
   @Input() swipe;
-  @Input('pan-boundary') panBoundary = 0.15;
+  @Input('pan-boundary') panBoundary: number | false = 0.15;
 
   // this default autoplay animation is same as aniClass
   @Input() align: 'left' | 'center' | 'right' = 'center';
@@ -604,7 +604,7 @@ export class NgxHmCarouselComponent implements ControlValueAccessor, AfterViewIn
           case 'panend':
             // if boundary more than rate
             if (
-              this.panBoundary &&
+              this.panBoundary !== false &&
               Math.abs(e.deltaX) > this.elmWidth * this.panBoundary
             ) {
               const moveNum = this.isDragMany ?
