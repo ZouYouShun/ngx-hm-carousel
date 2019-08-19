@@ -10,7 +10,7 @@ import { debounceTime, tap, finalize } from 'rxjs/operators';
  */
 export function resizeObservable(elm: HTMLElement, cb: () => void, time = 200): Observable<any> {
   let elmObserve$: ResizeObserver;
-  return Observable.create((observer: Subscriber<any>) => {
+  return new Observable((observer: Subscriber<any>) => {
     elmObserve$ = new ResizeObserver((entries, obs) => {
       observer.next(elmObserve$);
     });
