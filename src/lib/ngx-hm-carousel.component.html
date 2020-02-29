@@ -2,35 +2,33 @@
   <!-- main content -->
   <ng-content select="[ngx-hm-carousel-container]"></ng-content>
   <!-- left -->
-  <div #prev *ngIf="contentPrev"
-    class="direction left">
+  <div #prev *ngIf="contentPrev" class="direction left">
     <ng-container *ngTemplateOutlet="contentPrev"></ng-container>
   </div>
   <!--  right -->
-  <div #next *ngIf="contentNext"
-    class="direction right">
+  <div #next *ngIf="contentNext" class="direction right">
     <ng-container *ngTemplateOutlet="contentNext"></ng-container>
   </div>
   <!-- indicators -->
   <ul class="indicators" *ngIf="dotElm">
-    <li
-      *ngFor="let dot of itemElms; let i = index;"
-      (click)="currentIndex = i">
+    <li *ngFor="let dot of itemElms; let i = index" (click)="currentIndex = i">
       <ng-container
-        *ngTemplateOutlet="dotElm, context: {
-          $implicit: {
-            index : i,
-            currentIndex : currentIndex
+        *ngTemplateOutlet="
+          dotElm;
+          context: {
+            $implicit: {
+              index: i,
+              currentIndex: currentIndex
+            }
           }
-        }">
+        "
+      >
       </ng-container>
     </li>
   </ul>
   <!-- progress -->
   <div *ngIf="progressElm && autoplay" #progress>
-    <ng-container
-      *ngTemplateOutlet="progressElm">
-    </ng-container>
+    <ng-container *ngTemplateOutlet="progressElm"> </ng-container>
   </div>
 
   <div class="mask" *ngIf="grabbing">

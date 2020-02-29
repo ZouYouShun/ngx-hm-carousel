@@ -1,12 +1,17 @@
-import { Directive, Input, OnInit, TemplateRef, ViewContainerRef } from '@angular/core';
+import {
+  Directive,
+  Input,
+  OnInit,
+  TemplateRef,
+  ViewContainerRef,
+} from '@angular/core';
 
 // TODO: ssr problem should not hide on ssr
 // TODO: show number change should recaculate is show and init show number
 @Directive({
-  selector: '[ngxHmCarouselDynamic]'
+  selector: '[ngxHmCarouselDynamic]',
 })
 export class NgxHmCarouselDynamicDirective implements OnInit {
-
   @Input('ngxHmCarouselDynamic') index: number;
   @Input('ngxHmCarouselDynamicLength') length: number;
   @Input('ngxHmCarouselDynamicShow') show = 1;
@@ -32,11 +37,10 @@ export class NgxHmCarouselDynamicDirective implements OnInit {
 
   constructor(
     private _view: ViewContainerRef,
-    private _template: TemplateRef<any>) {
+    private _template: TemplateRef<any>,
+  ) {
     this._view.clear();
   }
 
-  ngOnInit(): void {
-  }
-
+  ngOnInit(): void {}
 }

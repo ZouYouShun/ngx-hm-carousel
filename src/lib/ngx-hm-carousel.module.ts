@@ -6,21 +6,17 @@ import { NgxHmCarouselDynamicDirective } from './ngx-hm-carousel-dynamic.directi
 import { NgxHmCarouselComponent } from './ngx-hm-carousel.component';
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 
-
 @NgModule({
-  imports: [
-    CommonModule,
-    FormsModule,
-  ],
+  imports: [CommonModule, FormsModule],
   declarations: [
     NgxHmCarouselComponent,
     NgxHmCarouselDynamicDirective,
-    NgxHmCarouselItemDirective
+    NgxHmCarouselItemDirective,
   ],
   exports: [
     NgxHmCarouselComponent,
     NgxHmCarouselDynamicDirective,
-    NgxHmCarouselItemDirective
-  ]
+    NgxHmCarouselItemDirective,
+  ],
 })
-export class NgxHmCarouselModule { }
+export class NgxHmCarouselModule {}
