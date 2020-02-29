@@ -1,3 +1,8 @@
+## 2.0.0-rc.1
+
+### Update
+* **angular**: update angular to angular 9.0
+
 ## 1.7.1
 
 ### Feature

@@ -1,12 +1,12 @@
 {
   "name": "ngx-hm-carousel",
-  "version": "1.7.2",
+  "version": "2.0.0-rc.1",
   "dependencies": {
     "resize-observer-polyfill": "^1.5.1",
     "hammerjs": "^2.0.8"
   },
   "peerDependencies": {
-    "@angular/common": ">=8.0.0",
-    "@angular/core": ">=8.0.0"
+    "@angular/common": ">=9.0.0",
+    "@angular/core": ">=9.0.0"
   }
 }
