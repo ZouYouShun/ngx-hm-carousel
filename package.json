@@ -5,8 +5,25 @@
     "resize-observer-polyfill": "^1.5.1",
     "hammerjs": "^2.0.8"
   },
+  "description": "A light carousel for Angular, support mobile touch by hammerJs with SSR",
+  "keywords": [
+    "angular",
+    "angular2",
+    "ng",
+    "ngx",
+    "ng2",
+    "ngx-carousel",
+    "carousel",
+    "hammerjs"
+  ],
   "peerDependencies": {
     "@angular/common": ">=9.0.0",
     "@angular/core": ">=9.0.0"
-  }
+  },
+  "repository": {
+    "url": "https://github.com/ZouYouShun/ngx-hm-carousel.git",
+    "type": "git"
+  },
+  "license": "MIT",
+  "author": "ZouYouShun"
 }
