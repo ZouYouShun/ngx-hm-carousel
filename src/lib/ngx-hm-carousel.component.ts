@@ -120,6 +120,28 @@ export class NgxHmCarouselComponent
   /** Minimal velocity required before recognizing, unit is in px per ms, default `0.3` */
   @Input('swipe-velocity') swipeVelocity = 0.3;
 
+
+  /**
+   * custom @Input('fixedItemWidth')
+   */
+  @Input('fixedItemWidth')
+  get fixedItemWidth() {
+    return this._fixedItemWidth;
+  }
+  set fixedItemWidth(value) {
+    if (this.rootElm) {
+      if (this._fixedItemWidth !== value) {
+        if (value) {
+          this.destoryHammer();
+        } else {
+          this.hammer = this.bindHammer();
+        }
+      }
+    }
+    this._fixedItemWidth = value;
+  }
+
+
   /**
    * switch show number with custom logic like css @media (min-width: `number`px)
    */
@@ -330,7 +352,12 @@ export class NgxHmCarouselComponent
         addIndex = (this.showNum as number) - 1;
         break;
     }
-    return this.itemElms.length - 1 - this._showNum + 1 + addIndex;
+
+    if (this._fixedItemWidth > 0) {
+      return this.itemElms.length - Math.floor(this.rootElmWidth / this._fixedItemWidth);
+    } else {
+      return this.itemElms.length - 1 - this._showNum + 1 + addIndex;
+    }
   }
 
   private get runLoop() {
@@ -381,6 +408,7 @@ export class NgxHmCarouselComponent
   private _tmpInfinite = false;
   private _grabbing = false;
   private _disableDrag = false;
+  private _fixedItemWidth = 0;
 
   private panCount = 0;
 
@@ -617,7 +645,11 @@ export class NgxHmCarouselComponent
         'ngx-hm-carousel-display-npwrap',
       );
     }
-    this.elmWidth = this.rootElmWidth / this._showNum;
+    if (this._fixedItemWidth > 0) {
+      this.elmWidth = this._fixedItemWidth;
+    } else {
+      this.elmWidth = this.rootElmWidth / this._showNum;
+    }
 
     this._renderer.removeClass(
       this.containerElm,
