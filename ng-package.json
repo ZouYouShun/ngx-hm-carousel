@@ -4,12 +4,8 @@
   "lib": {
     "entryFile": "src/public-api.ts",
     "umdModuleIds": {
-      "resize-observer-polyfill": "resize-observer-polyfill",
       "hammerjs": "hammerjs"
     }
   },
-  "whitelistedNonPeerDependencies": [
-    "resize-observer-polyfill",
-    "hammerjs"
-  ]
+  "allowedNonPeerDependencies": ["hammerjs"]
 }

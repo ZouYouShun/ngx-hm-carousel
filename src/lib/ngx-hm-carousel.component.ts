@@ -53,7 +53,8 @@ import { resizeObservable } from './rxjs.observable.resize';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NgxHmCarouselComponent
-  implements ControlValueAccessor, AfterViewInit, OnDestroy {
+  implements ControlValueAccessor, AfterViewInit, OnDestroy
+{
   @ViewChild('containerElm') container: ElementRef;
   @ViewChild('prev') btnPrev: ElementRef;
   @ViewChild('next') btnNext: ElementRef;
@@ -78,8 +79,10 @@ export class NgxHmCarouselComponent
 
   /** the data you using with *ngFor, it need when infinite mode or autoplay mode */
   @Input() data: any[];
+
   /** when infinite is true, the animation time with item, default is 400. */
   @Input() aniTime = 400;
+
   /** this class will add in #containerElm when model change */
   @Input() aniClass = 'transition';
 
@@ -96,7 +99,7 @@ export class NgxHmCarouselComponent
    */
   @Input('pan-boundary') panBoundary: number | false = 0.15;
 
-  /** when show-num is bigger than 1, the first item align, defaulte is `center` */
+  /** when `show-num` is bigger than 1, the first item align, default is `center` */
   @Input() align: 'left' | 'center' | 'right' = 'center';
 
   /**
@@ -106,17 +109,22 @@ export class NgxHmCarouselComponent
   @Input('not-follow-pan') notDrag = false;
 
   /**
-   * the event binding state for stop auto play when mourse moveover
+   * the event binding state for stop auto play when mouse moveover
    */
-  @Input('mourse-enable') mourseEnable = false;
+  @Input('mouse-enable') mouseEnable = false;
+
   /** each auto play between time */
   @Input('between-delay') delay = 8000;
+
   /** auto play direction, default is `right`. */
   @Input('autoplay-direction') direction: 'left' | 'right' = 'right';
+
   /** how many number with each scroll, default is `1`. */
   @Input('scroll-num') scrollNum = 1;
+
   /** Could user scroll many item once, simulate with scrollbar, default is `false` */
   @Input('drag-many') isDragMany = false;
+
   /** Minimal velocity required before recognizing, unit is in px per ms, default `0.3` */
   @Input('swipe-velocity') swipeVelocity = 0.3;
 
@@ -134,7 +142,7 @@ export class NgxHmCarouselComponent
     if (this.rootElm) {
       if (this._disableDrag !== value) {
         if (value) {
-          this.destoryHammer();
+          this.destroyHammer();
         } else {
           this.hammer = this.bindHammer();
         }
@@ -189,7 +197,7 @@ export class NgxHmCarouselComponent
     }
   }
 
-  /** carousel auto play confing */
+  /** is that carousel auto play */
   @Input('autoplay')
   get autoplay() {
     return this._autoplay;
@@ -223,7 +231,7 @@ export class NgxHmCarouselComponent
     return this._currentIndex;
   }
   set currentIndex(value) {
-    // if now index if not equale to save index, do someting
+    // if now index is not equal to save index, do something
     if (this.currentIndex !== value) {
       // if the value is not contain with the boundary not handler
       if (!this.runLoop && !(0 <= value && value <= this.itemElms.length - 1)) {
@@ -256,11 +264,11 @@ export class NgxHmCarouselComponent
   }
 
   get progressWidth() {
-    return this._porgressWidth;
+    return this._progressWidth;
   }
   set progressWidth(value) {
     if (this.progressElm !== undefined && this.autoplay) {
-      this._porgressWidth = value;
+      this._progressWidth = value;
       this._renderer.setStyle(
         (this.progressContainerElm.nativeElement as HTMLElement).children[0],
         'width',
@@ -373,7 +381,7 @@ export class NgxHmCarouselComponent
   private stopEvent = new Subject<any>();
   private destroy$ = new Subject<any>();
 
-  private _porgressWidth = 0;
+  private _progressWidth = 0;
   private _currentIndex = 0;
   private _showNum = 1;
   private _autoplay = false;
@@ -390,7 +398,7 @@ export class NgxHmCarouselComponent
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,
-    @Inject(DOCUMENT) private _document,
+    @Inject(DOCUMENT) private _document: any,
     private _renderer: Renderer2,
     private _zone: NgZone,
     private _cd: ChangeDetectorRef,
@@ -409,7 +417,7 @@ export class NgxHmCarouselComponent
         // detectChanges to change view dots
         tap(() => {
           if (this.currentIndex > this.itemElms.length - 1) {
-            // i can't pass the changedetection check, only the way to using timeout. :(
+            // i can't pass the change detection check, only the way to using timeout. :(
             setTimeout(() => {
               this.currentIndex = this.itemElms.length - 1;
             }, 0);
@@ -443,9 +451,11 @@ export class NgxHmCarouselComponent
   registerOnChange(fn: (value: any) => any) {
     this.onChange = fn;
   }
+
   registerOnTouched(fn: () => any) {
     this.onTouched = fn;
   }
+
   private onChange = (_: any) => {};
   private onTouched = () => {};
 
@@ -463,14 +473,14 @@ export class NgxHmCarouselComponent
   }
 
   private destroy() {
-    this.destoryHammer();
+    this.destroyHammer();
 
     if (this.autoplay) {
       this.doNextSub$.unsubscribe();
     }
   }
 
-  private destoryHammer() {
+  private destroyHammer() {
     if (this.hammer) {
       this.hammer.destroy();
     }
@@ -533,10 +543,12 @@ export class NgxHmCarouselComponent
     this.setViewWidth();
     this.reSetAlignDistance();
 
-    // 因為不能滑了，所以要回到第一個，以確保全部都有顯示
-    if (this.align !== 'center' && this.showNum >= this.elms.length) {
+    const touchEnd = this.showNum >= this.elms.length;
+
+    if (this.align !== 'center' && touchEnd) {
       this.currentIndex = 0;
     }
+
     this.drawView(this.currentIndex, false);
   }
 
@@ -546,7 +558,7 @@ export class NgxHmCarouselComponent
 
       let startEvent = this.restart.asObservable();
       let stopEvent = this.stopEvent.asObservable();
-      if (this.mourseEnable) {
+      if (this.mouseEnable) {
         startEvent = merge(
           startEvent,
           fromEvent(this.containerElm, 'mouseleave').pipe(
@@ -565,7 +577,7 @@ export class NgxHmCarouselComponent
       }
 
       this.doNext = startEvent.pipe(
-        // not using debounceTime, it will stop mourseover event detect, will cause mourse-enable error
+        // not using debounceTime, it will stop mouseover event detect, will cause mouse-enable error
         // debounceTime(this.delay),
         switchMap(() => this.speedChange),
         switchMap(() =>
@@ -614,14 +626,14 @@ export class NgxHmCarouselComponent
       // remain one elm height
       this._renderer.addClass(
         this.containerElm,
-        'ngx-hm-carousel-display-npwrap',
+        'ngx-hm-carousel-display-nowrap',
       );
     }
     this.elmWidth = this.rootElmWidth / this._showNum;
 
     this._renderer.removeClass(
       this.containerElm,
-      'ngx-hm-carousel-display-npwrap',
+      'ngx-hm-carousel-display-nowrap',
     );
 
     this.containerElmWidth = this.elmWidth * this.elms.length;
@@ -692,7 +704,7 @@ export class NgxHmCarouselComponent
                 e.deltaX;
             }
 
-            // // if not dragmany, when bigger than half
+            //  if not drag many, when bigger than half
             if (!this.isDragMany) {
               if (Math.abs(e.deltaX) > this.elmWidth * 0.5) {
                 if (e.deltaX > 0) {
@@ -894,7 +906,7 @@ export class NgxHmCarouselComponent
     const currWidth = this.rootElmWidth;
     // check user has had set breakpoint
     if (this.breakpoint.length > 0) {
-      // get the last bigget point
+      // get the last biggest point
       const now = this.breakpoint.find((b) => {
         return b.width >= currWidth;
       });

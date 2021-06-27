@@ -1,4 +1,3 @@
-import ResizeObserver from 'resize-observer-polyfill';
 import { Observable, Subscriber } from 'rxjs';
 import { debounceTime, tap, finalize } from 'rxjs/operators';
 
@@ -11,7 +10,7 @@ import { debounceTime, tap, finalize } from 'rxjs/operators';
 export function resizeObservable(
   elm: HTMLElement,
   cb: () => void,
-  time = 200,
+  time = 200
 ): Observable<any> {
   let elmObserve$: ResizeObserver;
   return new Observable((observer: Subscriber<any>) => {
@@ -27,6 +26,6 @@ export function resizeObservable(
     finalize(() => {
       elmObserve$.unobserve(elm);
       elmObserve$.disconnect();
-    }),
+    })
   );
 }
