@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 
 // TODO: ssr problem should not hide on ssr
-// TODO: show number change should recaculate is show and init show number
+// TODO: show number change should recalculate is show and init show number
 @Directive({
   selector: '[ngxHmCarouselDynamic]',
 })
@@ -17,7 +17,7 @@ export class NgxHmCarouselDynamicDirective implements OnInit {
   @Input('ngxHmCarouselDynamicShow') show = 1;
   @Input('ngxHmCarouselDynamicIndex')
   set currentI(value: number) {
-    if (!this.compelete) {
+    if (!this.completed) {
       const nextI = value + this.show;
       const prevI = value - this.show;
       if (
@@ -28,12 +28,12 @@ export class NgxHmCarouselDynamicDirective implements OnInit {
         this.index === value
       ) {
         this._view.createEmbeddedView(this._template);
-        this.compelete = true;
+        this.completed = true;
       }
     }
   }
 
-  private compelete = false;
+  private completed = false;
 
   constructor(
     private _view: ViewContainerRef,

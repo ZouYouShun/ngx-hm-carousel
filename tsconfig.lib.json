@@ -7,8 +7,6 @@
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
-    "baseUrl": "./",
-    "paths": {},
     "types": [
       "hammerjs"
     ],
@@ -16,11 +14,6 @@
       "dom",
       "es2018"
     ]
-  },
-  "angularCompilerOptions": {
-    "skipTemplateCodegen": true,
-    "strictMetadataEmit": true,
-    "enableResourceInlining": true
   },
   "exclude": [
     "src/test.ts",

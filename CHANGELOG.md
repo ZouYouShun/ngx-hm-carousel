@@ -1,3 +1,8 @@
+## 3.0.0
+
+### Feature
+- **angular**: update angular to angular 13
+
 ## 2.0.0
 
 ### Feature
