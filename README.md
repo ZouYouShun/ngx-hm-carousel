@@ -18,124 +18,42 @@ Support `Angular 18+` please use `v18.x.x` version, which follow the main versio
 
 for version before v18, please use `v3.0.0`, view more legacy version in [legacy readme](./README-LEGACY.md).
 
-## Example
-
-https://alanzouhome.firebaseapp.com/package/NgxHmCarousel
-
 ![](https://res.cloudinary.com/dw7ecdxlp/image/upload/v1533206320/1533206262496_soounq.gif)
 
 ![](https://i.imgur.com/SyyBSR9.gif)
 
 ## Stackblitz Example
 
-[with custom animation](https://stackblitz.com/edit/ngx-hm-carousel-fade-example)
-
-[custom-breakpoint](https://stackblitz.com/edit/ngx-hm-carousel-custom-breakpoint)
-
-[change-show-number-dynamicly](https://stackblitz.com/edit/ngx-hm-carousel-change-show-number-dynamicly)
-
-[disable-drag event](https://stackblitz.com/edit/ngx-hm-carousel-disable-drag)
-
-[loop carousel](https://stackblitz.com/edit/ngx-hm-carousel-seprate-transition-class)
+[Stackblitz](https://stackblitz.com/edit/stackblitz-starters-nkd5pk?file=src%2Fmain.ts)
 
 ## Install
 
 ```ts
-npm install --save ngx-hm-carousel
+npm install --save ngx-hm-carousel hammerjs
 ```
 
-1. HammerJs
-
-- Import `hammerjs` in your `main.ts` or `app.config.ts` to ensure the `Hammerjs` is loaded.
+## Example
 
 ```ts
 import 'hammerjs';
-```
 
-2. ResizeObserver
-   We base on browser `ResizeObserver` API, if you need support not support browser, import [`polyfill`](https://www.npmjs.com/package/resize-observer-polyfill) in your `polyfills.ts`.
+import { provideExperimentalZonelessChangeDetection, model } from '@angular/core';
 
-polyfills.ts
-
-```ts
-import 'resize-observer-polyfill';
-```
-
-- Import `NgxHmCarouselComponent` into your component where you want use.
-
-1. Module
-
-```ts
-import {
-  NgxHmCarouselComponent,
-  NgxHmCarouselItemDirective,
-  NgxHmCarouselDynamicDirective
-} from 'ngx-hm-carousel';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { NgxHmCarouselComponent, NgxHmCarouselDynamicDirective, NgxHmCarouselItemDirective } from './lib';
+import { NgClass, NgFor } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
-  ...
+  selector: 'app-root',
   standalone: true,
-  imports: [
-    NgxHmCarouselComponent,
-    NgxHmCarouselItemDirective,
-    NgxHmCarouselDynamicDirective,
-    ...
-  ],
+  imports: [NgxHmCarouselComponent, NgxHmCarouselItemDirective, NgxHmCarouselDynamicDirective, NgClass, FormsModule, NgFor],
+  templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class YourComponent {}
-```
-
-2. HTML
-
-```html
-<ngx-hm-carousel [(ngModel)]="currentIndex" [show-num]="4" [autoplay-speed]="speed" [infinite]="infinite" [drag-many]="true" [aniTime]="200" [data]="avatars" class="carousel c-accent">
-  <section ngx-hm-carousel-container class="content">
-    <article class="item cursor-pointer" ngx-hm-carousel-item *ngFor="let avatar of avatars; let i = index" [ngClass]="{'visible': currentIndex===i}">
-      <div class="img" (click)="click(i)" [style.backgroundImage]="'url('+avatar.url+')'">{{i}}</div>
-    </article>
-    <ng-template #infiniteContainer></ng-template>
-  </section>
-
-  <!-- only using in infinite mode or autoplay mode, that will render with-->
-  <ng-template #carouselContent let-avatar let-i="index">
-    <article class="item cursor-pointer" [ngClass]="{'visible': currentIndex===i}">
-      <div class="img" (click)="click(i)" [style.backgroundImage]="'url('+avatar.url+')'">{{i}}</div>
-    </article>
-  </ng-template>
-
-  <ng-template #carouselPrev>
-    <div class="click-area">
-      <i class="material-icons">keyboard_arrow_left</i>
-    </div>
-  </ng-template>
-  <ng-template #carouselNext>
-    <div class="click-area">
-      <i class="material-icons">keyboard_arrow_right</i>
-    </div>
-  </ng-template>
-
-  <ng-template #carouselDot let-model>
-    <div class="ball bg-accent" [class.visible]="model.index === model.currentIndex"></div>
-  </ng-template>
-
-  <ng-template #carouselProgress let-progress>
-    <div class="progress"></div>
-  </ng-template>
-</ngx-hm-carousel>
-```
-
-2. TS
-
-```ts
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-drag-one',
-  templateUrl: './drag-one.component.html',
-  styleUrls: ['./drag-one.component.scss'],
-})
-export class DragOneComponent {
-  currentIndex = 0;
+export class App {
+  currentIndex = model(0);
   speed = 5000;
   infinite = true;
   direction = 'right';
@@ -150,79 +68,56 @@ export class DragOneComponent {
     };
   });
 
-  constructor() {}
-
-  click(i) {
-    alert(`${i}`);
+  click(i: number) {
+    console.log(`${i}`);
   }
 }
+
+bootstrapApplication(App, {
+  providers: [provideExperimentalZonelessChangeDetection()],
+});
 ```
 
-3. SCSS
+app.component.html
 
-- this project not contain any specific style, you can custom by yourself, like below
+```html
+<ngx-hm-carousel [(ngModel)]="currentIndex" [show-num]="4" [autoplay-speed]="speed" [infinite]="infinite" [drag-many]="true" [aniTime]="200" [data]="avatars" class="select-none">
+  <section ngx-hm-carousel-container class="flex">
+    <article class="transition-opacity duration-200 ease-linear py-2 px-1" ngx-hm-carousel-item *ngFor="let avatar of avatars; let i = index" [ngClass]="currentIndex() === i ? 'opacity-100' : 'opacity-50'">
+      <div class="h-96 bg-cover bg-center cursor-pointer" (click)="click(i)" [style.backgroundImage]="'url(' + avatar.url + ')'">{{ i }}</div>
+    </article>
+    <ng-template #infiniteContainer></ng-template>
+  </section>
 
-```scss
-$transition_time: 0.2s;
+  <!-- only using in infinite mode or autoplay mode, that will render with-->
+  <ng-template #carouselContent let-avatar let-i="index">
+    <article class="transition-opacity duration-200 ease-linear py-2 px-1" [ngClass]="currentIndex() === i ? 'opacity-100' : 'opacity-50'">
+      <div class="h-96 bg-cover bg-center cursor-pointer" (click)="click(i)" [style.backgroundImage]="'url(' + avatar.url + ')'">{{ i }}</div>
+    </article>
+  </ng-template>
 
-.carousel {
-  color: white;
-  .content {
-    display: flex;
+  <ng-template #carouselPrev>
+    <div class="w-[50px] text-center">
+      <i class="material-icons text-3xl">keyboard_arrow_left</i>
+    </div>
+  </ng-template>
+  <ng-template #carouselNext>
+    <div class="w-[50px] text-center">
+      <i class="material-icons text-3xl">keyboard_arrow_right</i>
+    </div>
+  </ng-template>
 
-    .item {
-      width: 100%;
-      padding: 0.5em;
-      display: block;
-      opacity: 0.5;
+  <ng-template #carouselDot let-model>
+    <div class="size-2.5 opacity-50 rounded-full border-2 border-solid bg-blue-600" [ngClass]="{ 'opacity-100': model.index === model.currentIndex }"></div>
+  </ng-template>
 
-      transition: opacity 0.295s linear $transition_time;
-
-      &.visible {
-        opacity: 1;
-      }
-
-      .img {
-        width: 100%;
-        height: 400px;
-        display: block;
-        background-size: cover;
-        background-position: center;
-      }
-    }
-  }
-
-  .ball {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: black;
-    border: 2px solid;
-    opacity: 0.5;
-
-    &.visible {
-      opacity: 1;
-    }
-  }
-
-  .click-area {
-    width: 50px;
-    text-align: center;
-
-    i {
-      font-size: 3em;
-    }
-  }
-}
+  <ng-template #carouselProgress let-progress>
+    <div class="progress"></div>
+  </ng-template>
+</ngx-hm-carousel>
 ```
 
-[View more examples](https://alanzouhome.firebaseapp.com/package/NgxHmCarousel)
-
-## Attribute
-
-### Configuration (Input)
-
----
+## Input and Output
 
 | Attribute            | Necessary | Default value | Type                                | Location        | Description                                                                                                                                         |
 | -------------------- | --------- | ------------- | ----------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
