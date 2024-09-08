@@ -1,8 +1,7 @@
 {
-  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
-  "dest": "../../dist/ngx-hm-carousel",
+  "$schema": "../../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../../dist/libs/angular/ngx-hm-carousel",
   "lib": {
-    "entryFile": "src/public-api.ts"
-  },
-  "allowedNonPeerDependencies": ["hammerjs"]
+    "entryFile": "src/index.ts"
+  }
 }

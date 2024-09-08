@@ -1,37 +1,48 @@
 <div #containerElm class="carousel">
   <!-- main content -->
-  <ng-content select="[ngx-hm-carousel-container]"></ng-content>
+  <ng-content select="[ngx-hm-carousel-container]" />
   <!-- left -->
-  <div #prev *ngIf="contentPrev" class="direction left">
-    <ng-container *ngTemplateOutlet="contentPrev"></ng-container>
-  </div>
+  @if (contentPrev(); as prevVar) {
+    <div #prev class="direction left">
+      <ng-container *ngTemplateOutlet="prevVar" />
+    </div>
+  }
   <!--  right -->
-  <div #next *ngIf="contentNext" class="direction right">
-    <ng-container *ngTemplateOutlet="contentNext"></ng-container>
-  </div>
+  @if (contentNext(); as nextVar) {
+    <div #next class="direction right">
+      <ng-container *ngTemplateOutlet="nextVar" />
+    </div>
+  }
   <!-- indicators -->
-  <ul class="indicators" *ngIf="dotElm">
-    <li *ngFor="let dot of itemElms; let i = index" (click)="currentIndex = i">
-      <ng-container
-        *ngTemplateOutlet="
-          dotElm;
-          context: {
-            $implicit: {
-              index: i,
-              currentIndex: currentIndex
-            }
-          }
-        "
-      >
-      </ng-container>
-    </li>
-  </ul>
+  @if (dotElm(); as dotVar) {
+    <ul class="indicators">
+      @for (dot of itemElms(); track dot; let i = $index) {
+        <li (click)="currentIndex = i">
+          <ng-container
+            *ngTemplateOutlet="
+              dotVar;
+              context: {
+                $implicit: {
+                  index: i,
+                  currentIndex: currentIndex
+                }
+              }
+            "
+          />
+        </li>
+      }
+    </ul>
+  }
   <!-- progress -->
-  <div *ngIf="progressElm && autoplay" #progress>
-    <ng-container *ngTemplateOutlet="progressElm"> </ng-container>
-  </div>
+  @if (autoplay() && progressElm(); as progressVar) {
+    <div #progress>
+      <ng-container *ngTemplateOutlet="progressVar" />
+    </div>
+  }
 
-  <div class="mask" *ngIf="grabbing">
-    <ng-container *ngIf="leaveObs$ | async"></ng-container>
-  </div>
+  @if (grabbing) {
+    <div class="mask">
+      @if (leaveObs$ | async) {}
+    </div>
+  }
 </div>

@@ -14,9 +14,7 @@ This package is design by angular and hammerjs.
 
 Depend on [Hammerjs](https://hammerjs.github.io/).
 
-Support `Angular 18+` please use `v18.x.x` version, which follow the main version of Angular.
-
-for version before v18, please use `v3.0.0`, view more legacy version in [legacy readme](./README-LEGACY.md).
+Support Angular 12+ and Rxjs6+
 
 ## Example
 
@@ -46,10 +44,18 @@ npm install --save ngx-hm-carousel
 
 1. HammerJs
 
-- Import `hammerjs` in your `main.ts` or `app.config.ts` to ensure the `Hammerjs` is loaded.
+- Import `hammerjs` in your main.ts or app.module.ts;
 
 ```ts
 import 'hammerjs';
+
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+import { AppModule } from './app/app.module';
+import { environment } from './environments/environment';
+...
+...
 ```
 
 2. ResizeObserver
@@ -59,30 +65,22 @@ polyfills.ts
 
 ```ts
 import 'resize-observer-polyfill';
+...
+
+import 'zone.js';
 ```
 
-- Import `NgxHmCarouselComponent` into your component where you want use.
+- Import `NgxHmCarouselModule` into your main AppModule or the module where you want use.
 
 1. Module
 
 ```ts
-import {
-  NgxHmCarouselComponent,
-  NgxHmCarouselItemDirective,
-  NgxHmCarouselDynamicDirective
-} from 'ngx-hm-carousel';
+import { NgxHmCarouselModule } from 'ngx-hm-carousel';
 
-@Component({
-  ...
-  standalone: true,
-  imports: [
-    NgxHmCarouselComponent,
-    NgxHmCarouselItemDirective,
-    NgxHmCarouselDynamicDirective,
-    ...
-  ],
+@NgModule({
+  imports: [NgxHmCarouselModule],
 })
-export class YourComponent {}
+export class YourModule {}
 ```
 
 2. HTML
@@ -160,7 +158,7 @@ export class DragOneComponent {
 
 3. SCSS
 
-- this project not contain any specific style, you can custom by yourself, like below
+- this project not contain any specile style, you can custom by yourself
 
 ```scss
 $transition_time: 0.2s;

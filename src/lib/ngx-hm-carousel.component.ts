@@ -1,28 +1,39 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
-  AfterViewInit,
+  AsyncPipe,
+  DOCUMENT,
+  isPlatformBrowser,
+  NgTemplateOutlet,
+} from '@angular/common';
+import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  ContentChild,
-  ContentChildren,
+  computed,
+  contentChild,
+  contentChildren,
+  DestroyRef,
+  effect,
   ElementRef,
   EmbeddedViewRef,
   forwardRef,
-  Inject,
-  Input,
+  inject,
+  input,
   NgZone,
   OnDestroy,
   PLATFORM_ID,
-  QueryList,
   Renderer2,
+  signal,
   TemplateRef,
-  ViewChild,
+  viewChild,
   ViewContainerRef,
 } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+
 import {
   BehaviorSubject,
+  bufferCount,
+  filter,
   forkJoin,
   fromEvent,
   interval,
@@ -31,13 +42,16 @@ import {
   of,
   Subject,
   Subscription,
+  switchMap,
+  takeUntil,
+  tap,
   timer,
 } from 'rxjs';
-import { bufferCount, filter, switchMap, takeUntil, tap } from 'rxjs/operators';
+
+import { resizeObservable } from '@nghedgehog/core';
 
 import { NgxHmCarouselItemDirective } from './ngx-hm-carousel-item.directive';
 import { NgxHmCarouselBreakPointUp } from './ngx-hm-carousel.model';
-import { resizeObservable } from './rxjs.observable.resize';
 
 @Component({
   selector: 'ngx-hm-carousel',
@@ -51,45 +65,54 @@ import { resizeObservable } from './rxjs.observable.resize';
     },
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [NgTemplateOutlet, AsyncPipe],
 })
-export class NgxHmCarouselComponent
-  implements ControlValueAccessor, AfterViewInit, OnDestroy
-{
-  @ViewChild('containerElm') container: ElementRef;
-  @ViewChild('prev') btnPrev: ElementRef;
-  @ViewChild('next') btnNext: ElementRef;
-  @ViewChild('progress') progressContainerElm: ElementRef;
+export class NgxHmCarouselComponent implements ControlValueAccessor, OnDestroy {
+  private platformId = inject<any>(PLATFORM_ID);
+  private _document = inject<any>(DOCUMENT);
+  private _destroyRef = inject<any>(DestroyRef);
+  private _renderer = inject(Renderer2);
+  private _zone = inject(NgZone);
+  private _cd = inject(ChangeDetectorRef);
+  container = viewChild.required('containerElm', { read: ElementRef });
+  btnPrev = viewChild<ElementRef>('prev');
+  btnNext = viewChild<ElementRef>('next');
+  progressContainerElm = viewChild('progress', { read: ElementRef });
 
   // get all item elms
-  @ContentChildren(NgxHmCarouselItemDirective, {
+  itemElms = contentChildren(NgxHmCarouselItemDirective, {
     read: ElementRef,
     descendants: true,
-  })
-  itemElms: QueryList<ElementRef>;
+  });
 
-  @ContentChild('carouselPrev') contentPrev: TemplateRef<any>;
-  @ContentChild('carouselNext') contentNext: TemplateRef<any>;
-  @ContentChild('carouselDot') dotElm: TemplateRef<any>;
-  @ContentChild('carouselProgress') progressElm: TemplateRef<any>;
+  contentPrev = contentChild('carouselPrev', { read: TemplateRef });
+  contentNext = contentChild('carouselNext', { read: TemplateRef });
+  dotElm = contentChild<TemplateRef<any>>('carouselDot');
+  progressElm = contentChild<TemplateRef<any>>('carouselProgress');
 
-  @ContentChild('infiniteContainer', { read: ViewContainerRef })
-  infiniteContainer: ViewContainerRef;
+  infiniteContainer = contentChild('infiniteContainer', {
+    read: ViewContainerRef,
+  });
 
-  @ContentChild('carouselContent') contentContent: TemplateRef<any>;
+  contentContent = contentChild.required('carouselContent', {
+    read: TemplateRef,
+  });
 
   /** the data you using with *ngFor, it need when infinite mode or autoplay mode */
-  @Input() data: any[];
+  data = input<any[]>([]);
 
   /** when infinite is true, the animation time with item, default is 400. */
-  @Input() aniTime = 400;
+  aniTime = input(400);
 
   /** this class will add in #containerElm when model change */
-  @Input() aniClass = 'transition';
+  aniClass = input('transition');
 
-  /** this class will add when carousel auto play,
+  /**
+   * this class will add when carousel auto play,
    * this default autoplay animation is same as aniClass
    */
-  @Input() aniClassAuto = this.aniClass;
+  aniClassAuto = input(this.aniClass());
 
   /**
    * user move picture with the container width rate,
@@ -97,135 +120,118 @@ export class NgxHmCarouselComponent
    * set false will never move with distance rate,
    * default is `0.15`
    */
-  @Input('pan-boundary') panBoundary: number | false = 0.15;
+  panBoundary = input<number | false>(0.15, { alias: 'pan-boundary' });
 
   /** when `show-num` is bigger than 1, the first item align, default is `center` */
-  @Input() align: 'left' | 'center' | 'right' = 'center';
+  align = input<'left' | 'center' | 'right'>('center');
 
   /**
    * disable when drag occur the child element will follow touch point.
    * default is `false`
    */
-  @Input('not-follow-pan') notDrag = false;
+  notDrag = input(false, { alias: 'not-follow-pan' });
 
   /**
-   * the event binding state for stop auto play when mouse moveover
+   * the event binding state for stop auto play when mouse move over
    */
-  @Input('mouse-enable') mouseEnable = false;
+  mouseEnable = input(false, { alias: 'mouse-enable' });
 
   /** each auto play between time */
-  @Input('between-delay') delay = 8000;
+  delay = input(8000, { alias: 'between-delay' });
 
   /** auto play direction, default is `right`. */
-  @Input('autoplay-direction') direction: 'left' | 'right' = 'right';
+  direction = input<'left' | 'right'>('right', { alias: 'autoplay-direction' });
 
   /** how many number with each scroll, default is `1`. */
-  @Input('scroll-num') scrollNum = 1;
+  scrollNum = input(1, { alias: 'scroll-num' });
 
   /** Could user scroll many item once, simulate with scrollbar, default is `false` */
-  @Input('drag-many') isDragMany = false;
+  isDragMany = input(false, { alias: 'drag-many' });
 
   /** Minimal velocity required before recognizing, unit is in px per ms, default `0.3` */
-  @Input('swipe-velocity') swipeVelocity = 0.3;
+  swipeVelocity = input(0.3, { alias: 'swipe-velocity' });
 
   /**
-   * switch show number with custom logic like css @media (min-width: `number`px)
+   * switch show number with custom logic like css
+   * @media (min-width: `number`px)
    */
-  @Input() breakpoint: NgxHmCarouselBreakPointUp[] = [];
+  breakpoint = input<NgxHmCarouselBreakPointUp[]>([]);
 
   /** disable drag event with touch and mouse pan moving, default is `false` */
-  @Input('disable-drag')
-  get disableDrag() {
-    return this._disableDrag;
-  }
-  set disableDrag(value) {
-    if (this.rootElm) {
-      if (this._disableDrag !== value) {
+  disableDrag = input(undefined, {
+    alias: 'disable-drag',
+    transform: (value: boolean) => {
+      if (this.rootElm) {
         if (value) {
           this.destroyHammer();
         } else {
           this.hammer = this.bindHammer();
         }
       }
-    }
-    this._disableDrag = value;
-  }
+      return value;
+    },
+  });
 
   /** is the carousel can move infinite */
-  @Input('infinite')
-  get infinite() {
-    return this._infinite;
-  }
-  set infinite(value) {
-    this._infinite = value;
-
-    this.infiniteElmRefs.forEach((ref) => {
-      this.addStyle(ref.rootNodes[0], {
-        visibility: this.runLoop ? 'visible' : 'hidden',
-      });
-    });
-  }
+  infinite = input(false, {
+    alias: 'infinite',
+  });
 
   /** auto play speed */
-  @Input('autoplay-speed')
-  get speed() {
-    return this.speedChange.value;
-  }
-  set speed(value) {
-    this._zone.runOutsideAngular(() => {
+  speed = input(undefined, {
+    alias: 'autoplay-speed',
+    transform: (value: number) => {
       this.speedChange.next(value);
-    });
-  }
+      return value;
+    },
+  });
 
+  /** PinchRecognizer that you want to add to hammer event */
+  recognizers = input<Recognizer[]>([]);
+
+  /** PinchRecognizer that you want to add to hammer event */
+  stopPanListener = input(false);
+  private _showNum = 1;
   /**
    * how many number items to show once, default is `1`
    * set `auto` to using `[breakpoint]` set value.
    */
-  @Input('show-num')
-  get showNum() {
-    return this._showNum;
-  }
-  set showNum(value: number | 'auto') {
-    if (value === 'auto') {
-      this.isAutoNum = true;
-    } else {
-      this._showNum = +value;
-      if (this.rootElm) {
-        this.setViewWidth();
-        this.reSetAlignDistance();
+  showNum = input(this._showNum, {
+    alias: 'show-num',
+    transform: (value: number | 'auto') => {
+      if (value === 'auto') {
+        this.isAutoNum = true;
+      } else {
+        this._showNum = +value;
+        if (this.rootElm) {
+          this.setViewWidth();
+          this.reSetAlignDistance();
+        }
       }
-    }
-  }
+
+      return this._showNum;
+    },
+  });
 
   /** is that carousel auto play */
-  @Input('autoplay')
-  get autoplay() {
-    return this._autoplay;
-  }
-  set autoplay(value) {
-    if (isPlatformBrowser(this.platformId)) {
-      if (this.elms) {
-        this.progressWidth = 0;
-        if (value) {
-          this._zone.runOutsideAngular(() => {
-            this.doNextSub$ = this.doNext.subscribe();
-          });
-        } else {
-          if (this.doNextSub$) {
-            this.doNextSub$.unsubscribe();
+  autoplay = input(undefined, {
+    alias: 'autoplay',
+    transform: (value: boolean) => {
+      if (isPlatformBrowser(this.platformId)) {
+        if (this.elms) {
+          this.progressWidth = 0;
+          if (value) {
+            this.doNextSub$ = this.doNext$?.subscribe();
+          } else {
+            if (this.doNextSub$) {
+              this.doNextSub$.unsubscribe();
+            }
           }
         }
       }
-    }
-    this._autoplay = value;
-    // if set autoplay, then the infinite is true
-    if (value) {
-      this._tmpInfinite = this.infinite;
-      this.infinite = true;
-    } else {
-      this.infinite = this._tmpInfinite;
-    }
-  }
+      return value;
+    },
+  });
 
   get currentIndex() {
     return this._currentIndex;
@@ -234,25 +240,28 @@ export class NgxHmCarouselComponent
     // if now index is not equal to save index, do something
     if (this.currentIndex !== value) {
       // if the value is not contain with the boundary not handler
-      if (!this.runLoop && !(0 <= value && value <= this.itemElms.length - 1)) {
+      if (
+        !this.runLoop() &&
+        !(0 <= value && value <= this.itemElms().length - 1)
+      ) {
         return;
       }
       this._currentIndex = value;
       if (this.elms) {
-        if (this.autoplay && !this.isFromAuto) {
+        if (this.autoplay() && !this.isFromAuto) {
           this._zone.runOutsideAngular(() => {
-            this.stopEvent.next();
+            this.stopEvent.next(undefined);
             this.callRestart();
           });
         }
         this.drawView(this.currentIndex, this.hasInitWriteValue);
-        if (this.isDragMany) {
+        if (this.isDragMany()) {
           this.hasInitWriteValue = true;
         }
       }
       if (
         0 <= this.currentIndex &&
-        this.currentIndex <= this.itemElms.length - 1
+        this.currentIndex <= this.itemElms().length - 1
       ) {
         this._zone.run(() => {
           this.onChange(this.currentIndex);
@@ -267,10 +276,11 @@ export class NgxHmCarouselComponent
     return this._progressWidth;
   }
   set progressWidth(value) {
-    if (this.progressElm !== undefined && this.autoplay) {
+    const containerElm = this.progressContainerElm();
+    if (this.progressElm() && containerElm && this.autoplay()) {
       this._progressWidth = value;
       this._renderer.setStyle(
-        (this.progressContainerElm.nativeElement as HTMLElement).children[0],
+        (containerElm.nativeElement as HTMLElement).children[0],
         'width',
         `${this.progressWidth}%`,
       );
@@ -299,8 +309,8 @@ export class NgxHmCarouselComponent
 
   // using for check mouse or touchend
   leaveObs$ = merge(
-    fromEvent(this._document, 'mouseup'),
-    fromEvent(this._document, 'touchend'),
+    fromEvent<MouseEvent>(this._document, 'mouseup'),
+    fromEvent<TouchEvent>(this._document, 'touchend'),
   ).pipe(
     tap((e: Event) => {
       this.grabbing = false;
@@ -308,6 +318,8 @@ export class NgxHmCarouselComponent
       e.preventDefault();
     }),
   );
+
+  hammer!: HammerManager | null;
 
   private set left(value: number) {
     if (isPlatformBrowser(this.platformId)) {
@@ -327,25 +339,24 @@ export class NgxHmCarouselComponent
 
   private get maxRightIndex() {
     let addIndex = 0;
-    switch (this.align) {
+    switch (this.align()) {
       case 'left':
         addIndex = 0;
         break;
       case 'center':
-        addIndex = (this.showNum as number) - 1;
+        addIndex = (this.showNum() as number) - 1;
         break;
       case 'right':
-        addIndex = (this.showNum as number) - 1;
+        addIndex = (this.showNum() as number) - 1;
         break;
     }
-    return this.itemElms.length - 1 - this._showNum + 1 + addIndex;
+    return this.itemElms().length - 1 - this._showNum + 1 + addIndex;
   }
 
-  private get runLoop() {
-    return this.autoplay || this.infinite;
-  }
+  runLoop = computed(() => this.autoplay() || this.infinite());
+
   private get lengthOne() {
-    return this.itemElms.length === 1;
+    return this.itemElms().length === 1;
   }
 
   private get rootElmWidth() {
@@ -364,31 +375,23 @@ export class NgxHmCarouselComponent
   private alignDistance = 0;
   private elmWidth = 0;
 
-  private rootElm: HTMLElement;
-  private containerElm: HTMLElement;
+  private rootElm!: HTMLElement;
+  private containerElm!: HTMLElement;
 
-  private elms: Array<HTMLElement>;
-  private infiniteElmRefs: Array<EmbeddedViewRef<any>> = [];
+  private elms!: Array<HTMLElement>;
+  private infiniteElmRefs = signal<Array<EmbeddedViewRef<any>>>([]);
 
-  private hammer: HammerManager;
-
-  private saveTimeOut: Subscription;
-  private doNextSub$: Subscription;
-  private doNext: Observable<any>;
+  private saveTimeOut$?: Subscription;
+  private doNextSub$?: Subscription;
+  private doNext$?: Observable<any>;
 
   private restart = new BehaviorSubject<any>(null);
   private speedChange = new BehaviorSubject(5000);
   private stopEvent = new Subject<any>();
-  private destroy$ = new Subject<any>();
 
   private _progressWidth = 0;
   private _currentIndex = 0;
-  private _showNum = 1;
-  private _autoplay = false;
-  private _infinite = false;
-  private _tmpInfinite = false;
   private _grabbing = false;
-  private _disableDrag = false;
 
   private panCount = 0;
 
@@ -396,49 +399,59 @@ export class NgxHmCarouselComponent
   // when init first, not set with animation
   private hasInitWriteValue = false;
 
-  constructor(
-    @Inject(PLATFORM_ID) private platformId: any,
-    @Inject(DOCUMENT) private _document: any,
-    private _renderer: Renderer2,
-    private _zone: NgZone,
-    private _cd: ChangeDetectorRef,
-  ) {}
+  protected readonly itemElmsChanges = toObservable(this.itemElms);
 
-  ngAfterViewInit() {
-    this.rootElm = this.container.nativeElement;
-    this.containerElm = this.rootElm.children[0] as HTMLElement;
+  constructor() {
+    effect(() => {
+      this.infiniteElmRefs().forEach((ref) => {
+        this.addStyle(ref.rootNodes[0], {
+          visibility: this.runLoop() ? 'visible' : 'hidden',
+        });
+      });
+    });
 
-    this.init();
+    const effectRef = effect(
+      () => {
+        this.rootElm = this.container().nativeElement;
+        this.containerElm = this.rootElm.children[0] as HTMLElement;
 
-    forkJoin([
-      this.bindClick(),
-      // when item changed, remove old hammer binding, and reset width
-      this.itemElms.changes.pipe(
-        // detectChanges to change view dots
-        tap(() => {
-          if (this.currentIndex > this.itemElms.length - 1) {
-            // i can't pass the change detection check, only the way to using timeout. :(
-            setTimeout(() => {
-              this.currentIndex = this.itemElms.length - 1;
-            }, 0);
-          }
-          this.destroy();
-          this.removeInfiniteElm();
-          this.init();
-          this.progressWidth = 0;
-        }),
-        tap(() => this._cd.detectChanges()),
-      ),
-      resizeObservable(this.rootElm, () => this.containerResize()),
-    ])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe();
+        this.init();
+
+        forkJoin([
+          this.bindClick(),
+          // when item changed, remove old hammer binding, and reset width
+          this.itemElmsChanges.pipe(
+            // detectChanges to change view dots
+            tap(() => {
+              if (this.currentIndex > this.itemElms().length - 1) {
+                // pass the change detection check,
+                requestAnimationFrame(() => {
+                  this.currentIndex = this.itemElms().length - 1;
+                });
+              }
+              this.destroy();
+              this.removeInfiniteElm();
+              this.init();
+              this.progressWidth = 0;
+            }),
+            tap(() => this._cd.detectChanges()),
+          ),
+          resizeObservable(this.rootElm, () => this.containerResize()),
+        ])
+          .pipe(takeUntilDestroyed(this._destroyRef))
+          .subscribe();
+
+        // only exec once
+        effectRef.destroy();
+      },
+      {
+        allowSignalWrites: true,
+      },
+    );
   }
 
   ngOnDestroy() {
     this.destroy();
-    this.destroy$.next();
-    this.destroy$.unsubscribe();
   }
 
   writeValue(value: any) {
@@ -456,18 +469,22 @@ export class NgxHmCarouselComponent
     this.onTouched = fn;
   }
 
-  private onChange = (_: any) => {};
-  private onTouched = () => {};
+  private onChange = (_: any) => {
+    //
+  };
+  private onTouched = () => {
+    //
+  };
 
   private init() {
     this.initVariable();
     this.setViewWidth(true);
     this.reSetAlignDistance();
-    if (!this.disableDrag) {
+    if (!this.disableDrag()) {
       this.hammer = this.bindHammer();
     }
     this.drawView(this.currentIndex, false);
-    if (isPlatformBrowser(this.platformId) && this.runLoop) {
+    if (isPlatformBrowser(this.platformId) && this.runLoop()) {
       this.addInfiniteElm();
     }
   }
@@ -475,8 +492,8 @@ export class NgxHmCarouselComponent
   private destroy() {
     this.destroyHammer();
 
-    if (this.autoplay) {
-      this.doNextSub$.unsubscribe();
+    if (this.autoplay()) {
+      this.doNextSub$?.unsubscribe();
     }
   }
 
@@ -487,65 +504,63 @@ export class NgxHmCarouselComponent
   }
 
   private addInfiniteElm() {
-    for (let i = 1; i <= this.showNum; i++) {
-      const elm = this.infiniteContainer.createEmbeddedView(
-        this.contentContent,
-        {
-          $implicit: this.data[this.itemElms.length - i],
-          index: this.itemElms.length - i,
-        },
-      );
+    const infiniteContainer = this.infiniteContainer();
+    const showNum = this.showNum();
+
+    if (!infiniteContainer || typeof showNum !== 'number') return;
+    for (let i = 1; i <= showNum; i++) {
+      const elm = infiniteContainer.createEmbeddedView(this.contentContent(), {
+        $implicit: this.data()[this.itemElms().length - i],
+        index: this.itemElms().length - i,
+      });
       this.addStyle(elm.rootNodes[0], {
         position: 'absolute',
         // boxShadow: `0 0 0 5000px rgba(200, 75, 75, 0.5) inset`,
         transform: `translateX(-${100 * i}%)`,
-        visibility: this.runLoop ? 'visible' : 'hidden',
+        visibility: this.runLoop() ? 'visible' : 'hidden',
       });
       this.setStyle(elm.rootNodes[0], 'width', this.elmWidth);
 
-      const elm2 = this.infiniteContainer.createEmbeddedView(
-        this.contentContent,
-        {
-          $implicit: this.data[i - 1],
-          index: i - 1,
-        },
-      );
+      const elm2 = infiniteContainer.createEmbeddedView(this.contentContent(), {
+        $implicit: this.data()[i - 1],
+        index: i - 1,
+      });
       this.addStyle(elm2.rootNodes[0], {
         // boxShadow: `0 0 0 5000px rgba(200, 75, 75, 0.5) inset`,
         position: 'absolute',
         right: 0,
         top: 0,
         transform: `translateX(${100 * i}%)`,
-        visibility: this.runLoop ? 'visible' : 'hidden',
+        visibility: this.runLoop() ? 'visible' : 'hidden',
       });
       this.setStyle(elm2.rootNodes[0], 'width', this.elmWidth);
 
       elm.detectChanges();
       elm2.detectChanges();
 
-      this.infiniteElmRefs.push(elm);
-      this.infiniteElmRefs.push(elm2);
+      this.infiniteElmRefs.set([...this.infiniteElmRefs(), elm, elm2]);
     }
   }
 
   private removeInfiniteElm() {
-    this.infiniteElmRefs.forEach((a) => {
+    this.infiniteElmRefs().forEach((a) => {
       a.detach();
       a.destroy();
     });
-    if (this.infiniteContainer) {
-      this.infiniteContainer.clear();
+    if (this.infiniteContainer()) {
+      this.infiniteContainer()!.clear();
     }
-    this.infiniteElmRefs = [];
+    this.infiniteElmRefs.set([]);
   }
 
   private containerResize() {
     this.setViewWidth();
     this.reSetAlignDistance();
 
-    const touchEnd = this.showNum >= this.elms.length;
+    const showNum = this.showNum();
+    const touchEnd = typeof showNum === 'number' && showNum >= this.elms.length;
 
-    if (this.align !== 'center' && touchEnd) {
+    if (this.align() !== 'center' && touchEnd) {
       this.currentIndex = 0;
     }
 
@@ -554,11 +569,11 @@ export class NgxHmCarouselComponent
 
   private initVariable() {
     this._zone.runOutsideAngular(() => {
-      this.elms = this.itemElms.toArray().map((x) => x.nativeElement);
+      this.elms = this.itemElms().map((x) => x.nativeElement);
 
       let startEvent = this.restart.asObservable();
       let stopEvent = this.stopEvent.asObservable();
-      if (this.mouseEnable) {
+      if (this.mouseEnable()) {
         startEvent = merge(
           startEvent,
           fromEvent(this.containerElm, 'mouseleave').pipe(
@@ -576,20 +591,20 @@ export class NgxHmCarouselComponent
         );
       }
 
-      this.doNext = startEvent.pipe(
+      this.doNext$ = startEvent.pipe(
         // not using debounceTime, it will stop mouseover event detect, will cause mouse-enable error
         // debounceTime(this.delay),
         switchMap(() => this.speedChange),
         switchMap(() =>
-          timer(this.delay).pipe(
+          timer(this.delay()).pipe(
             switchMap(() => this.runProgress(20)),
             tap(() => {
               this.isFromAuto = true;
               // console.log('next');
-              if (this.direction === 'left') {
-                this.currentIndex -= this.scrollNum;
+              if (this.direction() === 'left') {
+                this.currentIndex -= this.scrollNum();
               } else {
-                this.currentIndex += this.scrollNum;
+                this.currentIndex += this.scrollNum();
               }
             }),
             takeUntil(stopEvent.pipe(tap(() => (this.progressWidth = 0)))),
@@ -597,14 +612,14 @@ export class NgxHmCarouselComponent
         ),
       );
 
-      if (this.autoplay) {
-        this.doNextSub$ = this.doNext.subscribe();
+      if (this.autoplay()) {
+        this.doNextSub$ = this.doNext$.subscribe();
       }
     });
   }
 
   private reSetAlignDistance() {
-    switch (this.align) {
+    switch (this.align()) {
       case 'center':
         this.alignDistance = (this.rootElmWidth - this.elmWidth) / 2;
         break;
@@ -640,7 +655,7 @@ export class NgxHmCarouselComponent
 
     this._renderer.setStyle(this.containerElm, 'position', 'relative');
 
-    this.infiniteElmRefs.forEach((ref) => {
+    this.infiniteElmRefs().forEach((ref) => {
       this.setStyle(ref.rootNodes[0], 'width', this.elmWidth);
     });
     this.elms.forEach((elm: HTMLElement) => {
@@ -665,55 +680,66 @@ export class NgxHmCarouselComponent
       hm.on('panleft panright panend pancancel', (e: HammerInput) => {
         // console.log(e.type);
 
+        if (this.stopPanListener()) {
+          return;
+        }
+
         if (this.lengthOne) {
           return;
         }
 
         this.removeContainerTransition();
 
-        if (this.autoplay) {
+        if (this.autoplay()) {
           this._zone.runOutsideAngular(() => {
-            this.stopEvent.next();
+            this.stopEvent.next(undefined);
           });
         }
 
         switch (e.type) {
           case 'panleft':
           case 'panright':
-            this.panCount++;
-            // only when panmove more than two times, set move
-            if (this.panCount < 2) {
-              return;
-            }
-
-            this.grabbing = true;
-            // When show-num is bigger than length, stop hammer
-            if (this.align !== 'center' && this.showNum >= this.elms.length) {
-              this.hammer.stop(true);
-              return;
-            }
-            // Slow down at the first and last pane.
-            if (!this.runLoop && this.outOfBound(e.type)) {
-              e.deltaX *= 0.2;
-            }
-
-            if (!this.notDrag) {
-              this.left =
-                -this.currentIndex * this.elmWidth +
-                this.alignDistance +
-                e.deltaX;
-            }
-
-            //  if not drag many, when bigger than half
-            if (!this.isDragMany) {
-              if (Math.abs(e.deltaX) > this.elmWidth * 0.5) {
-                if (e.deltaX > 0) {
-                  this.currentIndex -= this.scrollNum;
-                } else {
-                  this.currentIndex += this.scrollNum;
-                }
-                this.hammer.stop(true);
+            {
+              this.panCount++;
+              // only when panmove more than two times, set move
+              if (this.panCount < 2) {
                 return;
+              }
+
+              this.grabbing = true;
+              const showNum = this.showNum();
+              // When show-num is bigger than length, stop hammer
+              if (
+                this.align() !== 'center' &&
+                typeof showNum === 'number' &&
+                showNum >= this.elms.length
+              ) {
+                this.hammer?.stop(true);
+                return;
+              }
+              // Slow down at the first and last pane.
+              if (!this.runLoop() && this.outOfBound(e.type)) {
+                e.deltaX *= 0.2;
+              }
+
+              if (!this.notDrag()) {
+                this.left =
+                  -this.currentIndex * this.elmWidth +
+                  this.alignDistance +
+                  e.deltaX;
+              }
+
+              //  if not drag many, when bigger than half
+              if (!this.isDragMany()!) {
+                if (Math.abs(e.deltaX) > this.elmWidth * 0.5) {
+                  if (e.deltaX > 0) {
+                    this.currentIndex -= this.scrollNum();
+                  } else {
+                    this.currentIndex += this.scrollNum();
+                  }
+                  this.hammer?.stop(true);
+                  return;
+                }
               }
             }
             break;
@@ -722,35 +748,48 @@ export class NgxHmCarouselComponent
             break;
 
           case 'panend':
-            // if boundary more than rate
-            if (
-              this.panBoundary !== false &&
-              Math.abs(e.deltaX) > this.elmWidth * this.panBoundary
-            ) {
-              const moveNum = this.isDragMany
-                ? Math.ceil(Math.abs(e.deltaX) / this.elmWidth)
-                : this.scrollNum;
+            {
+              const panBoundary = this.panBoundary();
+              // if boundary more than rate
+              if (
+                panBoundary !== false &&
+                Math.abs(e.deltaX) > this.elmWidth * panBoundary
+              ) {
+                const moveNum = this.isDragMany()
+                  ? Math.ceil(Math.abs(e.deltaX) / this.elmWidth)
+                  : this.scrollNum();
 
-              const prevIndex = this.currentIndex - moveNum;
-              const nextIndex = this.currentIndex + moveNum;
+                const prevIndex = this.currentIndex - moveNum;
+                const nextIndex = this.currentIndex + moveNum;
 
-              // if right
-              if (e.deltaX > 0) {
-                this.goPrev(prevIndex);
-                // left
+                // if right
+                if (e.deltaX > 0) {
+                  this.goPrev(prevIndex);
+                  // left
+                } else {
+                  this.goNext(nextIndex);
+                }
+                break;
+              } else if (
+                e.velocityX < -this.swipeVelocity() &&
+                e.distance > 10
+              ) {
+                this.goNext(this.currentIndex + this.scrollNum());
+              } else if (
+                e.velocityX > this.swipeVelocity() &&
+                e.distance > 10
+              ) {
+                this.goPrev(this.currentIndex - this.scrollNum());
               } else {
-                this.goNext(nextIndex);
+                this.drawView(this.currentIndex);
               }
-              break;
-            } else if (e.velocityX < -this.swipeVelocity && e.distance > 10) {
-              this.goNext(this.currentIndex + this.scrollNum);
-            } else if (e.velocityX > this.swipeVelocity && e.distance > 10) {
-              this.goPrev(this.currentIndex - this.scrollNum);
-            } else {
-              this.drawView(this.currentIndex);
             }
             break;
         }
+      });
+
+      this.recognizers().forEach((recognizer) => {
+        hm.add(recognizer);
       });
 
       return hm;
@@ -758,7 +797,7 @@ export class NgxHmCarouselComponent
   }
 
   private goPrev(prevIndex: number) {
-    if (!this.runLoop && prevIndex < 0) {
+    if (!this.runLoop() && prevIndex < 0) {
       prevIndex = 0;
       this.drawView(0);
     }
@@ -766,7 +805,7 @@ export class NgxHmCarouselComponent
   }
 
   private goNext(nextIndex: number) {
-    if (!this.runLoop && nextIndex > this.maxRightIndex) {
+    if (!this.runLoop() && nextIndex > this.maxRightIndex) {
       nextIndex = this.maxRightIndex;
       this.drawView(nextIndex);
     }
@@ -774,12 +813,14 @@ export class NgxHmCarouselComponent
   }
 
   private bindClick() {
-    if (this.btnNext && this.btnPrev) {
+    const nextBtn = this.btnNext();
+    const prevBtn = this.btnPrev();
+    if (nextBtn && prevBtn) {
       return forkJoin([
-        fromEvent(this.btnNext.nativeElement, 'click').pipe(
+        fromEvent(nextBtn.nativeElement, 'click').pipe(
           tap(() => this.currentIndex++),
         ),
-        fromEvent(this.btnPrev.nativeElement, 'click').pipe(
+        fromEvent(prevBtn.nativeElement, 'click').pipe(
           tap(() => this.currentIndex--),
         ),
       ]);
@@ -791,7 +832,7 @@ export class NgxHmCarouselComponent
     // if that is autoplay
     // if that mouse is not on container( only mouse-enable is true, the state maybe true)
     // if now is grabbing, skip this restart, using grabbing change restart
-    if (this.autoplay && !this.mouseOnContainer && !this.grabbing) {
+    if (this.autoplay()! && !this.mouseOnContainer && !this.grabbing) {
       this._zone.runOutsideAngular(() => {
         this.restart.next(null);
       });
@@ -810,9 +851,9 @@ export class NgxHmCarouselComponent
 
       if (isAnimation) {
         if (isFromAuto) {
-          this._renderer.addClass(this.containerElm, this.aniClassAuto);
+          this._renderer.addClass(this.containerElm, this.aniClassAuto());
         } else {
-          this._renderer.addClass(this.containerElm, this.aniClass);
+          this._renderer.addClass(this.containerElm, this.aniClass());
         }
         // if infinite move to next index with timeout
         this.infiniteHandler(index);
@@ -823,38 +864,38 @@ export class NgxHmCarouselComponent
   }
 
   private removeContainerTransition() {
-    this._renderer.removeClass(this.containerElm, this.aniClass);
-    this._renderer.removeClass(this.containerElm, this.aniClassAuto);
+    this._renderer.removeClass(this.containerElm, this.aniClass());
+    this._renderer.removeClass(this.containerElm, this.aniClassAuto());
   }
 
   private infiniteHandler(index: number) {
-    if (this.runLoop) {
+    if (this.runLoop()) {
       let state = 0;
       state = index < 0 ? -1 : state;
-      state = index > this.itemElms.length - 1 ? 1 : state;
+      state = index > this.itemElms().length - 1 ? 1 : state;
 
       // index = index % this._showNum;
       if (state !== 0) {
         switch (state) {
           case -1:
             this._currentIndex =
-              (this.itemElms.length + index) % this.itemElms.length;
+              (this.itemElms().length + index) % this.itemElms().length;
             break;
           case 1:
-            this._currentIndex = index % this.itemElms.length;
+            this._currentIndex = index % this.itemElms().length;
             break;
         }
 
         const isFromAuto = this.isFromAuto;
-        if (this.saveTimeOut) {
-          this.saveTimeOut.unsubscribe();
+        if (this.saveTimeOut$) {
+          this.saveTimeOut$.unsubscribe();
         }
 
-        this.saveTimeOut = timer(this.aniTime)
+        this.saveTimeOut$ = timer(this.aniTime())
           .pipe(
             switchMap(() => {
               // if it is any loop carousel, the next event need wait the timeout complete
-              if (this.aniTime === this.speed) {
+              if (this.aniTime() === this.speed()) {
                 this.removeContainerTransition();
                 this.left =
                   -((this._currentIndex - state) * this.elmWidth) +
@@ -880,7 +921,7 @@ export class NgxHmCarouselComponent
     }
   }
 
-  private outOfBound(type) {
+  private outOfBound(type: 'panleft' | 'panright') {
     switch (type) {
       case 'panleft':
         return this.currentIndex >= this.maxRightIndex;
@@ -889,15 +930,16 @@ export class NgxHmCarouselComponent
     }
   }
 
-  private runProgress(betweenTime): Observable<any> {
+  private runProgress(betweenTime: number): Observable<any> {
     return this._zone.runOutsideAngular(() => {
-      const howTimes = this.speed / betweenTime;
-      const everyIncrease = (100 / this.speed) * betweenTime;
+      const speed = this.speed()!;
+      const howTimes = speed / betweenTime;
+      const everyIncrease = (100 / speed) * betweenTime;
       return interval(betweenTime).pipe(
         tap((t) => {
           this.progressWidth = (t % howTimes) * everyIncrease;
         }),
-        bufferCount(Math.round(howTimes), 0),
+        bufferCount(howTimes),
       );
     });
   }
@@ -905,16 +947,16 @@ export class NgxHmCarouselComponent
   private getAutoNum() {
     const currWidth = this.rootElmWidth;
     // check user has had set breakpoint
-    if (this.breakpoint.length > 0) {
+    if (this.breakpoint().length > 0) {
       // get the last biggest point
-      const now = this.breakpoint.find((b) => {
+      const now = this.breakpoint().find((b) => {
         return b.width >= currWidth;
       });
       // if find value, it is current width
       if (now) {
         return now.number;
       }
-      return this.breakpoint[this.breakpoint.length - 1].number;
+      return this.breakpoint()[this.breakpoint().length - 1].number;
     }
 
     // system init show number

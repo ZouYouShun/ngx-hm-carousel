@@ -1,14 +1,28 @@
+## 18.0.
+
+### Feature
+
+- **angular**: update angular to angular 18, from now on, the main version will follow `angular/core` version.
+- **angular** migrate to standalone component
+
+### ⚠ BREAKING CHANGES
+
+- **angular**: `NgxHmCarouselModule` be removed, use standalone component `NgxHmCarouselComponent` directly instead.
+
 ## 3.0.0
 
 ### Feature
+
 - **angular**: update angular to angular 13
 
 ## 2.0.0
 
 ### Feature
+
 - **angular**: update angular to angular 12
 
 ### ⚠ BREAKING CHANGES
+
 - **class**: change class name when init component `ngx-hm-carousel-display-npwrap` => `ngx-hm-carousel-display-nowrap`
 - **resize-observer-polyfill**: remove dependencies `resize-observer-polyfill`, if you need that polyfill, import that in `polyfills.ts` by your self
 - **mouse-enable**: fix error wording `mourse-enable` => `mouse-enable`
@@ -79,35 +93,15 @@
 
 ```html
 <section ngx-hm-carousel-container class="content">
-  <article
-    class="item cursor-pointer"
-    ngx-hm-carousel-item
-    *ngFor="let avatar of avatars; let i = index"
-    [ngClass]="{'visible': currentIndex===i}"
-  >
-    <div
-      class="img"
-      (click)="click(i)"
-      [style.backgroundImage]="'url('+avatar.url+')'"
-    >
-      {{i}}
-    </div>
+  <article class="item cursor-pointer" ngx-hm-carousel-item *ngFor="let avatar of avatars; let i = index" [ngClass]="{'visible': currentIndex===i}">
+    <div class="img" (click)="click(i)" [style.backgroundImage]="'url('+avatar.url+')'">{{i}}</div>
   </article>
   <ng-template #infiniteContainer></ng-template>
 </section>
 
 <ng-template #carouselContent let-avatar let-i="index">
-  <article
-    class="item cursor-pointer"
-    [ngClass]="{'visible': currentIndex===i}"
-  >
-    <div
-      class="img"
-      (click)="click(i)"
-      [style.backgroundImage]="'url('+avatar.url+')'"
-    >
-      {{i}}
-    </div>
+  <article class="item cursor-pointer" [ngClass]="{'visible': currentIndex===i}">
+    <div class="img" (click)="click(i)" [style.backgroundImage]="'url('+avatar.url+')'">{{i}}</div>
   </article>
 </ng-template>
 ```
@@ -288,25 +282,11 @@ export interface NgxHmCarouselBreakPointUp {
 ### Example
 
 ```html
-<ngx-hm-carousel
-  [current-index]="currentI"
-  [infinite]="true"
-  [align]="left"
-  class="carousel c-accent"
-  (index-change)="currentI = $event"
->
+<ngx-hm-carousel [current-index]="currentI" [infinite]="true" [align]="left" class="carousel c-accent" (index-change)="currentI = $event">
   <!-- style="height: calc(100vh - 50px);" -->
   <section ngx-hm-carousel-container class="content">
-    <article
-      class="item cursor-pointer"
-      *ngFor="let item of data; let i = index"
-      ngx-hm-carousel-item
-    >
-      <div
-        *ngxHmCarouselDynamic="i; length: data.length; index: currentI"
-        class="img"
-        [style.backgroundImage]="item.url"
-      ></div>
+    <article class="item cursor-pointer" *ngFor="let item of data; let i = index" ngx-hm-carousel-item>
+      <div *ngxHmCarouselDynamic="i; length: data.length; index: currentI" class="img" [style.backgroundImage]="item.url"></div>
     </article>
   </section>
 </ngx-hm-carousel>

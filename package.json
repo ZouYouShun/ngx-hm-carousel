@@ -1,11 +1,6 @@
 {
   "name": "ngx-hm-carousel",
-  "version": "3.0.0",
-  "dependencies": {
-    "tslib": "^2.3.1",
-    "hammerjs": "^2.0.8",
-    "@types/hammerjs": "^2.0.40"
-  },
+  "version": "18.0.0",
   "description": "A light carousel for Angular, support mobile touch by hammerJs with SSR",
   "keywords": [
     "angular",
@@ -17,14 +12,22 @@
     "carousel",
     "hammerjs"
   ],
+  "dependencies": {
+    "@nghedgehog/core": "^0.0.4",
+    "hammerjs": "^2.0.8",
+    "@types/hammerjs": "^2.0.45"
+  },
   "peerDependencies": {
-    "@angular/common": ">=13.0.0",
-    "@angular/core": ">=13.0.0"
+    "@angular/core": "^18.0.0",
+    "@angular/common": "^18.0.0",
+    "@angular/forms": "^18.0.0",
+    "rxjs": "^7.8.0"
   },
   "repository": {
     "url": "https://github.com/ZouYouShun/ngx-hm-carousel.git",
     "type": "git"
   },
   "license": "MIT",
-  "author": "ZouYouShun"
+  "author": "ZouYouShun",
+  "sideEffects": false
 }

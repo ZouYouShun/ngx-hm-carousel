@@ -1,5 +1,7 @@
 {
-  "extends": "../../.eslintrc.json",
+  "extends": [
+    "../../../.eslintrc.json"
+  ],
   "ignorePatterns": [
     "!**/*"
   ],
@@ -8,27 +10,24 @@
       "files": [
         "*.ts"
       ],
-      "parserOptions": {
-        "project": [
-          "projects/ngx-hm-carousel/tsconfig.lib.json",
-          "projects/ngx-hm-carousel/tsconfig.spec.json"
-        ],
-        "createDefaultProgram": true
-      },
+      "extends": [
+        "plugin:@nx/angular",
+        "plugin:@angular-eslint/template/process-inline-templates"
+      ],
       "rules": {
         "@angular-eslint/directive-selector": [
-          "error",
+          "off",
           {
             "type": "attribute",
-            "prefix": "ngx",
+            "prefix": "lib",
             "style": "camelCase"
           }
         ],
         "@angular-eslint/component-selector": [
-          "error",
+          "off",
           {
             "type": "element",
-            "prefix": "ngx",
+            "prefix": "lib",
             "style": "kebab-case"
           }
         ]
@@ -38,7 +37,27 @@
       "files": [
         "*.html"
       ],
+      "extends": [
+        "plugin:@nx/angular-template"
+      ],
       "rules": {}
+    },
+    {
+      "files": [
+        "*.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": [
+              "hammerjs",
+              "@types/hammerjs"
+            ]
+          }
+        ]
+      }
     }
   ]
 }
