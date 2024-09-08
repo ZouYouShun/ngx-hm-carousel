@@ -3,5 +3,10 @@
   "dest": "../../../dist/libs/angular/ngx-hm-carousel",
   "lib": {
     "entryFile": "src/index.ts"
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@nghedgehog/core",
+    "hammerjs",
+    "@types/hammerjs"
+  ]
 }
