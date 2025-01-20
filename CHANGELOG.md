@@ -1,3 +1,9 @@
+## 19.0.0
+
+### Feature
+
+- **angular**: update angular to angular 19
+
 ## 18.0.0
 
 ### Feature

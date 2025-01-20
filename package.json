@@ -1,6 +1,6 @@
 {
   "name": "ngx-hm-carousel",
-  "version": "18.0.0",
+  "version": "19.0.0",
   "description": "A light carousel for Angular, support mobile touch by hammerJs with SSR",
   "keywords": [
     "angular",
@@ -18,9 +18,9 @@
     "@types/hammerjs": "^2.0.45"
   },
   "peerDependencies": {
-    "@angular/core": "^18.0.0",
-    "@angular/common": "^18.0.0",
-    "@angular/forms": "^18.0.0",
+    "@angular/core": "^19.0.0",
+    "@angular/common": "^19.0.0",
+    "@angular/forms": "^19.0.0",
     "rxjs": "^7.8.0"
   },
   "repository": {
